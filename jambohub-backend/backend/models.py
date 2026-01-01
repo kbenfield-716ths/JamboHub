@@ -23,13 +23,36 @@ class User(Base):
     __tablename__ = "users"
     
     id = Column(String, primary_key=True, index=True)
-    name = Column(String, nullable=False, index=True)
-    email = Column(String, unique=True, nullable=False, index=True)
-    password_hash = Column(String, nullable=False)
+    username = Column(String, unique=True, nullable=True, index=True)
     
-    # Role: admin, adult, youth, parent
+    # Name fields
+    first_name = Column(String, nullable=False)
+    last_name = Column(String, nullable=False)
+    
+    # Contact info - email is NOT unique to allow family members to share
+    email = Column(String, nullable=False, index=True)
+    phone = Column(String, nullable=True)
+    
+    # Demographics
+    age = Column(Integer, nullable=True)
+    gender = Column(String, nullable=True)  # Male, Female, Other, Prefer not to say
+    
+    # Role: admin, parent, adult_leader, youth
     role = Column(String, nullable=False, default="youth")
-    unit = Column(String, nullable=True)  # e.g., "Troop 123", "Crew 22"
+    
+    # Position: Scoutmaster, Senior Patrol Leader, Patrol Leader, etc.
+    position = Column(String, nullable=True)
+    
+    # Unit and Patrol assignment
+    unit = Column(String, nullable=True)
+    patrol = Column(String, nullable=True)  # e.g., "Eagle Patrol", "Wolf Patrol"
+    
+    # Emergency contact
+    emergency_contact_name = Column(String, nullable=True)
+    emergency_contact_phone = Column(String, nullable=True)
+    
+    # Auth
+    password_hash = Column(String, nullable=False)
     
     # Status
     active = Column(Boolean, default=True)
@@ -43,6 +66,19 @@ class User(Base):
     
     # Relationships
     messages = relationship("Message", back_populates="author")
+    
+    @property
+    def name(self):
+        return f"{self.first_name} {self.last_name}"
+
+
+class Unit(Base):
+    """Scout unit (Troop, Crew, etc.)"""
+    __tablename__ = "units"
+    
+    id = Column(String, primary_key=True, index=True)
+    name = Column(String, nullable=False, unique=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 
 class Channel(Base):
@@ -53,23 +89,12 @@ class Channel(Base):
     name = Column(String, nullable=False)
     description = Column(String, nullable=True)
     icon = Column(String, default="📢")
-    
-    # Channel type: public, unit, leadership, parent
     type = Column(String, nullable=False, default="public")
-    
-    # For unit channels, which unit this belongs to
     unit = Column(String, nullable=True)
-    
-    # Comma-separated roles that can view: "admin,adult,youth,parent"
-    allowed_roles = Column(String, nullable=False, default="admin,adult,youth,parent")
-    
-    # Comma-separated roles that can post: "admin,adult"
-    can_post_roles = Column(String, nullable=False, default="admin,adult")
-    
+    allowed_roles = Column(String, nullable=False, default="admin,adult_leader,youth,parent")
+    can_post_roles = Column(String, nullable=False, default="admin,adult_leader")
     active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
-    
-    # Relationships
     messages = relationship("Message", back_populates="channel")
 
 
@@ -80,14 +105,10 @@ class Message(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     channel_id = Column(String, ForeignKey("channels.id"), nullable=False, index=True)
     user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
-    
     content = Column(Text, nullable=False)
     pinned = Column(Boolean, default=False)
-    
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # Relationships
     channel = relationship("Channel", back_populates="messages")
     author = relationship("User", back_populates="messages")
 
@@ -97,29 +118,18 @@ def init_db():
     print("[Database] Creating tables...")
     Base.metadata.create_all(bind=engine)
     
-    # Database optimizations
     try:
         with engine.connect() as conn:
             conn.execute(text("PRAGMA journal_mode=WAL"))
             conn.execute(text("PRAGMA cache_size=-20000"))
             conn.execute(text("PRAGMA synchronous=NORMAL"))
-            
-            # Indexes
-            conn.execute(text("""
-                CREATE INDEX IF NOT EXISTS idx_messages_channel_created 
-                ON messages(channel_id, created_at DESC)
-            """))
-            conn.execute(text("""
-                CREATE INDEX IF NOT EXISTS idx_users_role 
-                ON users(role)
-            """))
-            
+            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_messages_channel_created ON messages(channel_id, created_at DESC)"))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_users_role ON users(role)"))
             conn.commit()
         print("[Database] Initialization complete")
     except Exception as e:
         print(f"[Database] Warning: {e}")
     
-    # Seed default data if empty
     seed_default_data()
 
 
@@ -129,76 +139,37 @@ def seed_default_data():
     
     db = SessionLocal()
     try:
-        # Check if already seeded
         if db.query(User).first():
             print("[Database] Already seeded, skipping")
             return
         
         print("[Database] Seeding default data...")
         
-        # Default admin user
         admin = User(
             id="admin1",
-            name="Admin",
+            username="admin",
+            first_name="Admin",
+            last_name="User",
             email="admin@jambohub.org",
-            password_hash=hash_password("Jambo2026!"),
+            password_hash=hash_password("The3Bears"),
             role="admin",
+            position="System Administrator",
             unit="VAHC Leadership"
         )
         db.add(admin)
         
-        # Sample users
-        users_data = [
-            ("leader1", "Kyle Haines", "kyle.haines@vahc.org", "adult", "Crew 22"),
-            ("leader2", "Sarah Thompson", "sarah.thompson@vahc.org", "adult", "Troop 3125"),
-            ("leader3", "Mike Chen", "mike.chen@vahc.org", "adult", "Troop 114"),
-            ("scout1", "Liam H.", "liam.h@vahc.org", "youth", "Crew 22"),
-            ("scout2", "Alex M.", "alex.m@vahc.org", "youth", "Troop 3125"),
-            ("parent1", "Parent of Liam", "parent.liam@vahc.org", "parent", "Crew 22"),
-        ]
-        
-        for uid, name, email, role, unit in users_data:
-            user = User(
-                id=uid,
-                name=name,
-                email=email,
-                password_hash=hash_password("Jambo2026!"),
-                role=role,
-                unit=unit
-            )
-            db.add(user)
-        
-        # Default channels
         channels_data = [
-            ("announcements", "Contingent Announcements", "Official updates from leadership", "📢", "public", None, "admin,adult,youth,parent", "admin,adult"),
-            ("crew22", "Crew 22", "Crew 22 unit communication", "🏕️", "unit", "Crew 22", "admin,adult,youth,parent", "admin,adult,youth"),
-            ("troop3125", "Troop 3125", "Troop 3125 unit communication", "🏕️", "unit", "Troop 3125", "admin,adult,youth,parent", "admin,adult,youth"),
-            ("troop114", "Troop 114", "Troop 114 unit communication", "🏕️", "unit", "Troop 114", "admin,adult,youth,parent", "admin,adult,youth"),
-            ("leadership", "Adult Leadership", "Leadership coordination - adults only", "👥", "leadership", None, "admin,adult", "admin,adult"),
-            ("activities", "Activities & Schedule", "Daily schedules, merit badges, events", "📅", "public", None, "admin,adult,youth,parent", "admin,adult"),
-            ("parents", "Family Updates", "Updates for families back home", "👨‍👩‍👧‍👦", "parent", None, "admin,adult,parent", "admin,adult"),
+            ("announcements", "Contingent Announcements", "Official updates from leadership", "📢", "public", None, "admin,adult_leader,youth,parent", "admin,adult_leader"),
+            ("leadership", "Adult Leadership", "Leadership coordination - adults only", "👥", "leadership", None, "admin,adult_leader", "admin,adult_leader"),
+            ("activities", "Activities & Schedule", "Daily schedules, merit badges, events", "📅", "public", None, "admin,adult_leader,youth,parent", "admin,adult_leader"),
+            ("parents", "Family Updates", "Updates for families back home", "👨‍👩‍👧‍👦", "parent", None, "admin,adult_leader,parent", "admin,adult_leader"),
         ]
         
         for cid, name, desc, icon, ctype, unit, allowed, can_post in channels_data:
-            channel = Channel(
-                id=cid,
-                name=name,
-                description=desc,
-                icon=icon,
-                type=ctype,
-                unit=unit,
-                allowed_roles=allowed,
-                can_post_roles=can_post
-            )
+            channel = Channel(id=cid, name=name, description=desc, icon=icon, type=ctype, unit=unit, allowed_roles=allowed, can_post_roles=can_post)
             db.add(channel)
         
-        # Welcome message
-        welcome = Message(
-            channel_id="announcements",
-            user_id="admin1",
-            content="Welcome to JamboHub! This is your central place for all contingent communication during the 2026 National Jamboree. Please explore the different channels.",
-            pinned=True
-        )
+        welcome = Message(channel_id="announcements", user_id="admin1", content="Welcome to JamboHub! This is your central place for all contingent communication during the 2026 National Jamboree.", pinned=True)
         db.add(welcome)
         
         db.commit()
@@ -212,7 +183,6 @@ def seed_default_data():
 
 
 def get_db():
-    """Dependency for getting database session"""
     db = SessionLocal()
     try:
         yield db

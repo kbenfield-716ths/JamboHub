@@ -3,23 +3,19 @@
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
-// Get stored auth token
 function getToken() {
   return localStorage.getItem('jambohub-token');
 }
 
-// Store auth token
 function setToken(token) {
   localStorage.setItem('jambohub-token', token);
 }
 
-// Clear auth token
 function clearToken() {
   localStorage.removeItem('jambohub-token');
   localStorage.removeItem('jambohub-user');
 }
 
-// API request helper
 async function apiRequest(endpoint, options = {}) {
   const token = getToken();
   
@@ -123,7 +119,7 @@ export async function togglePinMessage(messageId) {
 }
 
 // ==========================================
-// ADMIN
+// ADMIN - USERS
 // ==========================================
 
 export async function getAllUsers() {
@@ -153,6 +149,34 @@ export async function deleteUser(userId) {
 export async function resetUserPassword(userId) {
   return apiRequest(`/api/admin/users/${userId}/reset-password`, {
     method: 'POST'
+  });
+}
+
+// ==========================================
+// ADMIN - UNITS
+// ==========================================
+
+export async function getUnits() {
+  return apiRequest('/api/admin/units');
+}
+
+export async function createUnit(unitData) {
+  return apiRequest('/api/admin/units', {
+    method: 'POST',
+    body: JSON.stringify(unitData)
+  });
+}
+
+export async function updateUnit(unitId, unitData) {
+  return apiRequest(`/api/admin/units/${unitId}`, {
+    method: 'PUT',
+    body: JSON.stringify(unitData)
+  });
+}
+
+export async function deleteUnit(unitId) {
+  return apiRequest(`/api/admin/units/${unitId}`, {
+    method: 'DELETE'
   });
 }
 

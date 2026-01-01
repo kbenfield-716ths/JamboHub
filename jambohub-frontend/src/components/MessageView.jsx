@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, Send, Pin, RefreshCw } from 'lucide-react';
 import * as api from '../lib/api';

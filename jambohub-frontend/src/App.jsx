@@ -1,75 +1,94 @@
-import { useState, useEffect } from 'react';
-import { MessageSquare, Calendar, Info, Shield, LogOut, Bell, BellOff } from 'lucide-react';
-import Login from './components/Login';
-import ChannelList from './components/ChannelList';
-import MessageView from './components/MessageView';
-import CalendarView from './components/Calendar';
-import InfoView from './components/Info';
-import Admin from './components/Admin';
+import React, { useState, useEffect } from 'react';
+import { 
+  Home, MessageSquare, Calendar, Info as InfoIcon, 
+  Shield, Menu, X, Bell, BellOff, LogOut, User
+} from 'lucide-react';
 import * as api from './lib/api';
+import Login from './components/Login';
+import Info from './components/Info';
+import MessageView from './components/MessageView';
+import ChannelList from './components/ChannelList';
+import Schedule from './components/Schedule';
+import Admin from './components/Admin';
 
-function App() {
+export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
-  const [channels, setChannels] = useState([]);
-  const [selectedChannel, setSelectedChannel] = useState(null);
-  const [activeTab, setActiveTab] = useState('messages');
   const [loading, setLoading] = useState(true);
+  const [activeView, setActiveView] = useState('info'); // Info is now default
+  const [selectedChannel, setSelectedChannel] = useState(null);
+  const [channels, setChannels] = useState([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [emailNotifications, setEmailNotifications] = useState(true);
 
-  // Check for existing session on mount
+  // Check authentication on mount
   useEffect(() => {
-    async function checkAuth() {
-      if (api.isAuthenticated()) {
-        try {
-          const user = await api.getCurrentUser();
-          if (user) {
-            setCurrentUser(user);
-            setEmailNotifications(user.email_notifications);
-          } else {
-            api.logout();
-          }
-        } catch (err) {
-          console.error('Auth check failed:', err);
-          api.logout();
-        }
-      }
-      setLoading(false);
-    }
     checkAuth();
   }, []);
 
   // Fetch channels when user logs in
   useEffect(() => {
-    async function fetchChannels() {
-      if (currentUser) {
-        try {
-          const channelList = await api.getChannels();
-          setChannels(channelList);
-          if (channelList.length > 0 && !selectedChannel) {
-            setSelectedChannel(channelList[0]);
-          }
-        } catch (err) {
-          console.error('Failed to fetch channels:', err);
+    if (currentUser) {
+      fetchChannels();
+      setEmailNotifications(currentUser.emailNotifications ?? true);
+    }
+  }, [currentUser]);
+
+  const checkAuth = async () => {
+    try {
+      if (api.isAuthenticated()) {
+        const user = await api.getCurrentUser();
+        if (user) {
+          setCurrentUser(user);
         }
       }
+    } catch (err) {
+      console.error('Auth check failed:', err);
+      api.logout();
+    } finally {
+      setLoading(false);
     }
-    fetchChannels();
-  }, [currentUser]);
+  };
+
+  const fetchChannels = async () => {
+    try {
+      const data = await api.getChannels();
+      setChannels(data);
+    } catch (err) {
+      console.error('Failed to fetch channels:', err);
+    }
+  };
 
   const handleLogin = (user) => {
     setCurrentUser(user);
-    setEmailNotifications(user.email_notifications ?? true);
+    setActiveView('info');
   };
 
   const handleLogout = () => {
     api.logout();
     setCurrentUser(null);
     setSelectedChannel(null);
-    setChannels([]);
-    setActiveTab('messages');
+    setActiveView('info');
   };
 
-  const handleToggleNotifications = async () => {
+  const handleNavigate = (view, channelId = null) => {
+    setActiveView(view);
+    if (channelId) {
+      const channel = channels.find(c => c.id === channelId);
+      setSelectedChannel(channel);
+    } else if (view === 'messages' && channels.length > 0) {
+      // Default to first channel when navigating to messages
+      setSelectedChannel(channels[0]);
+    }
+    setSidebarOpen(false);
+  };
+
+  const handleChannelSelect = (channel) => {
+    setSelectedChannel(channel);
+    setActiveView('messages');
+    setSidebarOpen(false);
+  };
+
+  const toggleNotifications = async () => {
     try {
       const newValue = !emailNotifications;
       await api.updateNotificationSettings(newValue);
@@ -79,9 +98,6 @@ function App() {
     }
   };
 
-  const isAdmin = currentUser?.role === 'admin';
-
-  // Loading state
   if (loading) {
     return (
       <div style={{
@@ -91,7 +107,7 @@ function App() {
         justifyContent: 'center',
         background: '#f5f5f5'
       }}>
-        <div style={{ textAlign: 'center', color: '#666' }}>
+        <div style={{ textAlign: 'center', color: '#6b7280' }}>
           <div style={{ fontSize: '24px', marginBottom: '8px' }}>🏕️</div>
           <div>Loading...</div>
         </div>
@@ -99,214 +115,302 @@ function App() {
     );
   }
 
-  // Show login if not authenticated
   if (!currentUser) {
     return <Login onLogin={handleLogin} />;
   }
 
+  const navItems = [
+    { id: 'info', icon: <Home size={22} />, label: 'Home' },
+    { id: 'messages', icon: <MessageSquare size={22} />, label: 'Messages' },
+    { id: 'schedule', icon: <Calendar size={22} />, label: 'Schedule' },
+  ];
+
+  // Add admin tab for admin users
+  if (currentUser.role === 'admin') {
+    navItems.push({ id: 'admin', icon: <Shield size={22} />, label: 'Admin' });
+  }
+
+  const renderContent = () => {
+    switch (activeView) {
+      case 'info':
+        return <Info onNavigate={handleNavigate} channels={channels} />;
+      case 'messages':
+        if (selectedChannel) {
+          return <MessageView channel={selectedChannel} currentUser={currentUser} />;
+        }
+        return (
+          <ChannelList 
+            channels={channels} 
+            onSelectChannel={handleChannelSelect}
+            currentUser={currentUser}
+          />
+        );
+      case 'schedule':
+        return <Schedule />;
+      case 'admin':
+        return <Admin currentUser={currentUser} />;
+      default:
+        return <Info onNavigate={handleNavigate} channels={channels} />;
+    }
+  };
+
   return (
     <div style={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
       height: '100vh',
-      maxWidth: '100vw',
-      overflow: 'hidden',
-      background: '#fff'
+      background: '#f5f5f5',
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden'
     }}>
-      {/* Header */}
+      {/* Top Header */}
       <header style={{
-        background: 'linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)',
-        color: 'white',
+        background: 'white',
+        borderBottom: '1px solid #e5e7eb',
         padding: '12px 16px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        flexShrink: 0
+        position: 'sticky',
+        top: 0,
+        zIndex: 100
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <img 
-            src="https://www.scouting.org/wp-content/uploads/2024/02/Jambo2026_National-Jamboree-Logo_Full-Color.png"
-            alt="2026 National Jamboree"
-            style={{ height: '36px', width: 'auto' }}
-          />
-          <div>
-            <div style={{ fontWeight: '700', fontSize: '16px', letterSpacing: '-0.3px' }}>JamboHub</div>
-            <div style={{ fontSize: '11px', opacity: 0.9 }}>VAHC Contingent</div>
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#6b7280'
+            }}
+          >
+            {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '24px' }}>🏕️</span>
+            <span style={{ fontWeight: '700', fontSize: '18px', color: '#1a1a1a' }}>JamboHub</span>
           </div>
         </div>
+
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {/* Notification toggle */}
           <button
-            onClick={handleToggleNotifications}
+            onClick={toggleNotifications}
+            title={emailNotifications ? 'Notifications On' : 'Notifications Off'}
             style={{
-              background: 'rgba(255,255,255,0.2)',
+              background: 'none',
               border: 'none',
-              borderRadius: '8px',
-              padding: '8px',
               cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
+              padding: '8px',
+              color: emailNotifications ? '#7C3AED' : '#9ca3af'
             }}
-            title={emailNotifications ? 'Notifications on' : 'Notifications off'}
           >
-            {emailNotifications ? (
-              <Bell size={18} color="white" />
-            ) : (
-              <BellOff size={18} color="rgba(255,255,255,0.6)" />
-            )}
+            {emailNotifications ? <Bell size={20} /> : <BellOff size={20} />}
           </button>
-          
-          {/* User info */}
-          <div style={{ textAlign: 'right', marginRight: '8px' }}>
-            <div style={{ fontSize: '13px', fontWeight: '600' }}>{currentUser.name}</div>
-            <div style={{ fontSize: '11px', opacity: 0.85 }}>{currentUser.unit}</div>
+          <div style={{
+            width: '36px',
+            height: '36px',
+            borderRadius: '10px',
+            background: 'linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+            fontWeight: '700',
+            fontSize: '14px'
+          }}>
+            {currentUser.firstName?.charAt(0) || currentUser.name?.charAt(0) || 'U'}
           </div>
-          
-          {/* Logout button */}
-          <button
-            onClick={handleLogout}
-            style={{
-              background: 'rgba(255,255,255,0.2)',
-              border: 'none',
-              borderRadius: '8px',
-              padding: '8px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            <LogOut size={18} color="white" />
-          </button>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main style={{ 
-        flex: 1, 
-        overflow: 'hidden',
+      {/* Sidebar Overlay */}
+      {sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.3)',
+            zIndex: 200
+          }}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside style={{
+        position: 'fixed',
+        top: 0,
+        left: sidebarOpen ? 0 : '-280px',
+        width: '280px',
+        height: '100vh',
+        background: 'white',
+        boxShadow: '2px 0 8px rgba(0,0,0,0.1)',
+        transition: 'left 0.2s ease',
+        zIndex: 300,
         display: 'flex',
         flexDirection: 'column'
       }}>
-        {activeTab === 'messages' && (
-          <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-            {/* Channel sidebar - hidden on mobile when viewing messages */}
-            <div style={{
-              width: '280px',
-              borderRight: '1px solid #e5e7eb',
-              overflow: 'auto',
-              flexShrink: 0,
-              display: selectedChannel ? 'none' : 'block'
-            }} className="channel-sidebar">
-              <ChannelList 
-                channels={channels}
-                selectedChannel={selectedChannel}
-                onSelectChannel={setSelectedChannel}
-                currentUser={currentUser}
-              />
+        {/* Sidebar Header */}
+        <div style={{
+          padding: '20px',
+          borderBottom: '1px solid #e5e7eb',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+          <div style={{
+            width: '48px',
+            height: '48px',
+            borderRadius: '12px',
+            background: 'linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+            fontWeight: '700',
+            fontSize: '18px'
+          }}>
+            {currentUser.firstName?.charAt(0) || 'U'}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontWeight: '600', fontSize: '15px', color: '#1a1a1a' }}>
+              {currentUser.firstName} {currentUser.lastName}
             </div>
-            
-            {/* Message view */}
-            <div style={{ flex: 1, overflow: 'hidden' }}>
-              <MessageView 
-                channel={selectedChannel}
-                currentUser={currentUser}
-                onBack={() => setSelectedChannel(null)}
-              />
+            <div style={{ fontSize: '13px', color: '#6b7280', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {currentUser.position || currentUser.role}
             </div>
           </div>
-        )}
-        
-        {activeTab === 'calendar' && (
-          <div style={{ flex: 1, overflow: 'auto' }}>
-            <CalendarView />
-          </div>
-        )}
-        
-        {activeTab === 'info' && (
-          <div style={{ flex: 1, overflow: 'auto' }}>
-            <InfoView />
-          </div>
-        )}
+        </div>
 
-        {activeTab === 'admin' && isAdmin && (
-          <div style={{ flex: 1, overflow: 'auto' }}>
-            <Admin currentUser={currentUser} />
-          </div>
-        )}
+        {/* Navigation */}
+        <nav style={{ flex: 1, padding: '12px' }}>
+          {navItems.map(item => (
+            <button
+              key={item.id}
+              onClick={() => handleNavigate(item.id)}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '14px 16px',
+                background: activeView === item.id ? '#EDE9FE' : 'transparent',
+                color: activeView === item.id ? '#7C3AED' : '#4b5563',
+                border: 'none',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                fontSize: '15px',
+                fontWeight: activeView === item.id ? '600' : '500',
+                marginBottom: '4px',
+                transition: 'background 0.15s'
+              }}
+            >
+              {item.icon}
+              {item.label}
+            </button>
+          ))}
+
+          {/* Channel List in Sidebar */}
+          {activeView === 'messages' && channels.length > 0 && (
+            <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #e5e7eb' }}>
+              <div style={{ fontSize: '12px', fontWeight: '600', color: '#9ca3af', padding: '0 16px 8px', textTransform: 'uppercase' }}>
+                Channels
+              </div>
+              {channels.map(channel => (
+                <button
+                  key={channel.id}
+                  onClick={() => handleChannelSelect(channel)}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '10px 16px',
+                    background: selectedChannel?.id === channel.id ? '#F3F4F6' : 'transparent',
+                    color: selectedChannel?.id === channel.id ? '#1a1a1a' : '#6b7280',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: selectedChannel?.id === channel.id ? '500' : '400',
+                    textAlign: 'left'
+                  }}
+                >
+                  <span>{channel.icon}</span>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{channel.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </nav>
+
+        {/* Logout */}
+        <div style={{ padding: '12px', borderTop: '1px solid #e5e7eb' }}>
+          <button
+            onClick={handleLogout}
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '14px 16px',
+              background: 'transparent',
+              color: '#DC2626',
+              border: 'none',
+              borderRadius: '10px',
+              cursor: 'pointer',
+              fontSize: '15px',
+              fontWeight: '500'
+            }}
+          >
+            <LogOut size={22} />
+            Sign Out
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main style={{ flex: 1, overflow: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        {renderContent()}
       </main>
 
-      {/* Bottom Navigation */}
+      {/* Bottom Navigation (Mobile) */}
       <nav style={{
-        display: 'flex',
+        background: 'white',
         borderTop: '1px solid #e5e7eb',
-        background: '#fff',
-        flexShrink: 0
+        padding: '8px 0',
+        display: 'flex',
+        justifyContent: 'space-around',
+        position: 'sticky',
+        bottom: 0
       }}>
-        <NavButton 
-          icon={<MessageSquare size={22} />} 
-          label="Messages" 
-          active={activeTab === 'messages'}
-          onClick={() => setActiveTab('messages')}
-        />
-        <NavButton 
-          icon={<Calendar size={22} />} 
-          label="Schedule" 
-          active={activeTab === 'calendar'}
-          onClick={() => setActiveTab('calendar')}
-        />
-        <NavButton 
-          icon={<Info size={22} />} 
-          label="Info" 
-          active={activeTab === 'info'}
-          onClick={() => setActiveTab('info')}
-        />
-        {isAdmin && (
-          <NavButton 
-            icon={<Shield size={22} />} 
-            label="Admin" 
-            active={activeTab === 'admin'}
-            onClick={() => setActiveTab('admin')}
-          />
-        )}
+        {navItems.slice(0, 4).map(item => (
+          <button
+            key={item.id}
+            onClick={() => handleNavigate(item.id)}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '8px 16px',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: activeView === item.id ? '#7C3AED' : '#9ca3af',
+              fontSize: '11px',
+              fontWeight: activeView === item.id ? '600' : '500'
+            }}
+          >
+            {item.icon}
+            <span>{item.label}</span>
+          </button>
+        ))}
       </nav>
-
-      {/* Desktop channel sidebar visibility */}
-      <style>{`
-        @media (min-width: 768px) {
-          .channel-sidebar {
-            display: block !important;
-          }
-        }
-      `}</style>
     </div>
   );
 }
-
-function NavButton({ icon, label, active, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '10px 8px',
-        background: 'none',
-        border: 'none',
-        cursor: 'pointer',
-        color: active ? '#7C3AED' : '#9ca3af',
-        gap: '4px',
-        transition: 'color 0.15s'
-      }}
-    >
-      {icon}
-      <span style={{ fontSize: '11px', fontWeight: active ? '600' : '500' }}>{label}</span>
-    </button>
-  );
-}
-
-export default App;

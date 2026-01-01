@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import * as api from '../lib/api';
 
@@ -42,11 +42,19 @@ export default function Login({ onLogin }) {
       }}>
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <img 
-            src="https://www.scouting.org/wp-content/uploads/2024/02/Jambo2026_National-Jamboree-Logo_Full-Color.png"
-            alt="2026 National Jamboree"
-            style={{ width: '140px', height: 'auto', marginBottom: '16px' }}
-          />
+          <div style={{
+            width: '80px',
+            height: '80px',
+            margin: '0 auto 16px',
+            background: 'linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)',
+            borderRadius: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '40px'
+          }}>
+            🏕️
+          </div>
           <h1 style={{ 
             fontSize: '28px', 
             fontWeight: '800', 
@@ -94,13 +102,13 @@ export default function Login({ onLogin }) {
               color: '#374151',
               marginBottom: '6px'
             }}>
-              Email
+              Username
             </label>
             <input
-              type="email"
+              type="text"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
+              placeholder="e.g., kyle.e"
               required
               style={{
                 width: '100%',
@@ -186,14 +194,14 @@ export default function Login({ onLogin }) {
           </button>
         </form>
 
-        {/* Help text */}
+        {/* Powered by */}
         <p style={{
-          marginTop: '20px',
-          fontSize: '13px',
+          marginTop: '24px',
+          fontSize: '12px',
           color: '#9ca3af',
           textAlign: 'center'
         }}>
-          Default password: <strong>Jambo2026!</strong>
+          Powered by <strong style={{ color: '#7C3AED' }}>Platypus & Fox</strong>
         </p>
       </div>
 
