@@ -14,11 +14,21 @@ export default function ChannelList({ user, channels, activeChannel, onChannelSe
 
   const getGroupIcon = (type) => {
     switch(type) {
-      case 'public': return <Hash size={12} />;
-      case 'unit': return <Users size={12} />;
-      case 'leadership': return <Crown size={12} />;
-      case 'parent': return <Heart size={12} />;
-      default: return <Hash size={12} />;
+      case 'public': return <Hash size={14} />;
+      case 'unit': return <Users size={14} />;
+      case 'leadership': return <Crown size={14} />;
+      case 'parent': return <Heart size={14} />;
+      default: return <Hash size={14} />;
+    }
+  };
+
+  const getGroupColor = (type) => {
+    switch(type) {
+      case 'public': return '#7C3AED';
+      case 'unit': return '#06B6D4';
+      case 'leadership': return '#F59E0B';
+      case 'parent': return '#EC4899';
+      default: return '#7C3AED';
     }
   };
 
@@ -30,39 +40,34 @@ export default function ChannelList({ user, channels, activeChannel, onChannelSe
       <button
         onClick={() => onChannelSelect(channel)}
         style={{
-          width: '100%',
-          padding: '10px 16px',
-          background: isActive ? '#F5F5F5' : 'transparent',
+          width: 'calc(100% - 24px)',
+          padding: '14px 16px',
+          background: isActive 
+            ? 'linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%)' 
+            : 'transparent',
           border: 'none',
           textAlign: 'left',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
-          gap: '10px',
-          borderRadius: '8px',
-          margin: '2px 8px',
-          maxWidth: 'calc(100% - 16px)',
-          transition: 'background 0.15s ease'
-        }}
-        onMouseEnter={(e) => {
-          if (!isActive) e.currentTarget.style.background = '#FAFAFA';
-        }}
-        onMouseLeave={(e) => {
-          if (!isActive) e.currentTarget.style.background = 'transparent';
+          gap: '12px',
+          borderRadius: '14px',
+          margin: '4px 12px',
+          transition: 'all 0.15s ease'
         }}
       >
         <span style={{ 
-          fontSize: '18px',
-          width: '24px',
+          fontSize: '22px',
+          width: '32px',
           textAlign: 'center'
         }}>
           {channel.icon}
         </span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ 
-            fontWeight: isActive ? '600' : '500',
-            color: isActive ? '#1a1a1a' : '#555',
-            fontSize: '14px',
+            fontWeight: isActive ? '700' : '600',
+            color: isActive ? '#5B21B6' : '#374151',
+            fontSize: '16px',
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis'
@@ -71,24 +76,25 @@ export default function ChannelList({ user, channels, activeChannel, onChannelSe
           </div>
           {warnings.length > 0 && (
             <div style={{ 
-              fontSize: '11px', 
+              fontSize: '12px', 
               color: '#DC2626', 
-              marginTop: '2px',
+              marginTop: '4px',
               display: 'flex',
               alignItems: 'center',
-              gap: '4px'
+              gap: '4px',
+              fontWeight: '600'
             }}>
-              <span style={{ fontSize: '10px' }}>⚠</span>
-              {warnings[0]}
+              ⚠️ {warnings[0]}
             </div>
           )}
         </div>
         {isActive && (
           <div style={{
-            width: '6px',
-            height: '6px',
-            background: '#1a1a1a',
-            borderRadius: '50%'
+            width: '8px',
+            height: '8px',
+            background: 'linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)',
+            borderRadius: '50%',
+            boxShadow: '0 2px 8px rgba(124, 58, 237, 0.4)'
           }} />
         )}
       </button>
@@ -98,21 +104,23 @@ export default function ChannelList({ user, channels, activeChannel, onChannelSe
   const ChannelGroup = ({ title, type, channels }) => {
     if (channels.length === 0) return null;
 
+    const color = getGroupColor(type);
+
     return (
-      <div style={{ marginBottom: '20px' }}>
+      <div style={{ marginBottom: '24px' }}>
         <div style={{
           padding: '8px 24px',
           display: 'flex',
           alignItems: 'center',
-          gap: '6px'
+          gap: '8px'
         }}>
-          <span style={{ color: '#aaa' }}>{getGroupIcon(type)}</span>
+          <span style={{ color }}>{getGroupIcon(type)}</span>
           <span style={{
-            fontSize: '11px',
-            fontWeight: '600',
-            color: '#999',
+            fontSize: '12px',
+            fontWeight: '800',
+            color: color,
             textTransform: 'uppercase',
-            letterSpacing: '0.5px'
+            letterSpacing: '1px'
           }}>
             {title}
           </span>
@@ -128,45 +136,51 @@ export default function ChannelList({ user, channels, activeChannel, onChannelSe
     <div style={{
       height: '100%',
       overflowY: 'auto',
-      background: 'white'
+      background: 'white',
+      display: 'flex',
+      flexDirection: 'column'
     }}>
-      {/* User info header */}
+      {/* User Profile Card */}
       <div style={{
-        padding: '20px 24px',
-        borderBottom: '1px solid rgba(0,0,0,0.04)'
+        padding: '24px 20px',
+        background: 'linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)',
+        margin: '16px',
+        borderRadius: '20px',
+        boxShadow: '0 8px 24px rgba(124, 58, 237, 0.25)'
       }}>
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '12px'
+          gap: '14px'
         }}>
           <div style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '12px',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            width: '52px',
+            height: '52px',
+            borderRadius: '16px',
+            background: 'rgba(255,255,255,0.25)',
             color: 'white',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontWeight: '600',
-            fontSize: '16px'
+            fontWeight: '700',
+            fontSize: '22px'
           }}>
             {user.name.charAt(0)}
           </div>
           <div>
             <div style={{
-              fontSize: '14px',
-              fontWeight: '600',
-              color: '#1a1a1a'
+              fontSize: '18px',
+              fontWeight: '700',
+              color: 'white'
             }}>
               {user.name}
             </div>
             <div style={{
-              fontSize: '12px',
-              color: '#888',
-              marginTop: '2px',
-              textTransform: 'capitalize'
+              fontSize: '14px',
+              color: 'rgba(255,255,255,0.85)',
+              marginTop: '4px',
+              textTransform: 'capitalize',
+              fontWeight: '500'
             }}>
               {user.role}
             </div>
@@ -175,7 +189,7 @@ export default function ChannelList({ user, channels, activeChannel, onChannelSe
       </div>
 
       {/* Channels */}
-      <div style={{ padding: '12px 0' }}>
+      <div style={{ padding: '8px 0', flex: 1 }}>
         <ChannelGroup title="Announcements" type="public" channels={groupedChannels.public} />
         <ChannelGroup title="Your Unit" type="unit" channels={groupedChannels.unit} />
         <ChannelGroup title="Leadership" type="leadership" channels={groupedChannels.leadership} />
@@ -184,22 +198,21 @@ export default function ChannelList({ user, channels, activeChannel, onChannelSe
 
       {/* Footer */}
       <div style={{
-        padding: '20px 24px',
-        borderTop: '1px solid rgba(0,0,0,0.04)',
-        marginTop: 'auto'
+        padding: '16px 20px',
+        borderTop: '2px solid #F3F4F6'
       }}>
         <div style={{
-          padding: '12px',
-          background: '#F9FAFB',
-          borderRadius: '10px',
+          padding: '14px',
+          background: 'linear-gradient(135deg, #F8F7FC 0%, #EDE9FE 100%)',
+          borderRadius: '12px',
           textAlign: 'center'
         }}>
           <div style={{
-            fontSize: '11px',
-            color: '#888',
-            fontWeight: '500'
+            fontSize: '13px',
+            color: '#7C3AED',
+            fontWeight: '700'
           }}>
-            VAHC Contingent 2025
+            🏕️ VAHC Contingent 2025
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { users } from '../data/mockData';
-import { Zap } from 'lucide-react';
+import { LogIn, Sparkles } from 'lucide-react';
 
 export default function Login({ onLogin }) {
   const [selectedUser, setSelectedUser] = React.useState('');
@@ -17,241 +17,241 @@ export default function Login({ onLogin }) {
     <div style={{
       minHeight: '100vh',
       display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'linear-gradient(135deg, #FAFBFC 0%, #E0E7F1 50%, #FFE5E5 100%)',
-      padding: '20px',
-      fontFamily: "'Noto Sans', sans-serif",
+      flexDirection: 'column',
+      background: 'linear-gradient(180deg, #7C3AED 0%, #A855F7 50%, #EC4899 100%)',
+      fontFamily: "'Nunito Sans', -apple-system, sans-serif",
       position: 'relative',
       overflow: 'hidden'
     }}>
-      {/* Floating decorative circles */}
+      {/* Decorative circles */}
       <div style={{
         position: 'absolute',
-        top: '10%',
-        left: '10%',
-        width: '200px',
-        height: '200px',
-        background: 'radial-gradient(circle, rgba(206, 17, 38, 0.08) 0%, transparent 70%)',
-        borderRadius: '50%',
-        animation: 'float 6s ease-in-out infinite'
-      }} />
-      <div style={{
-        position: 'absolute',
-        bottom: '15%',
-        right: '10%',
+        top: '-100px',
+        right: '-100px',
         width: '300px',
         height: '300px',
-        background: 'radial-gradient(circle, rgba(255, 107, 53, 0.08) 0%, transparent 70%)',
-        borderRadius: '50%',
-        animation: 'float 8s ease-in-out infinite reverse'
+        background: 'rgba(255,255,255,0.1)',
+        borderRadius: '50%'
+      }} />
+      <div style={{
+        position: 'absolute',
+        bottom: '100px',
+        left: '-80px',
+        width: '200px',
+        height: '200px',
+        background: 'rgba(255,255,255,0.08)',
+        borderRadius: '50%'
       }} />
 
-      <style>{`
-        @keyframes float {
-          0%, 100% { transform: translate(0, 0); }
-          50% { transform: translate(20px, -20px); }
-        }
-      `}</style>
-
+      {/* Hero Section */}
       <div style={{
-        background: 'white',
-        borderRadius: '24px',
-        padding: '48px 40px',
-        maxWidth: '460px',
-        width: '100%',
-        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.02)',
-        position: 'relative'
+        padding: '60px 24px 40px',
+        textAlign: 'center',
+        color: 'white'
       }}>
-        {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <img 
-            src="/platypus-fox-logo.png" 
-            alt="Platypus & Fox" 
-            style={{ 
-              width: '100px',
-              height: '100px',
-              marginBottom: '24px',
-              animation: 'float 3s ease-in-out infinite'
-            }} 
-          />
-          
-          <h1 style={{ 
-            fontSize: '32px', 
-            fontWeight: '800', 
-            background: 'linear-gradient(135deg, #CE1126 0%, #FF6B35 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            marginBottom: '8px',
-            letterSpacing: '-1px'
-          }}>
-            VAHC Jamboree
-          </h1>
-          <p style={{ 
-            color: '#6B7280', 
-            fontSize: '14px',
-            margin: 0,
-            fontWeight: '600',
-            letterSpacing: '2px',
-            textTransform: 'uppercase'
-          }}>
-            National Jamboree 2025
-          </p>
+        <div style={{ 
+          fontSize: '72px',
+          marginBottom: '20px'
+        }}>
+          🏕️
         </div>
+        
+        <h1 style={{ 
+          fontSize: '32px', 
+          fontWeight: '800', 
+          color: 'white',
+          marginBottom: '12px',
+          letterSpacing: '-0.5px'
+        }}>
+          JamboHub
+        </h1>
+        <p style={{ 
+          color: 'rgba(255,255,255,0.9)', 
+          fontSize: '16px',
+          margin: 0,
+          fontWeight: '600'
+        }}>
+          VAHC Contingent • 2025
+        </p>
+      </div>
 
-        <form onSubmit={handleLogin}>
-          <div style={{ marginBottom: '28px' }}>
-            <label style={{
-              display: 'block',
-              fontSize: '13px',
-              fontWeight: '700',
-              color: '#374151',
-              marginBottom: '10px',
-              letterSpacing: '0.5px',
-              textTransform: 'uppercase'
-            }}>
-              Select Account
-            </label>
-            <select
-              value={selectedUser}
-              onChange={(e) => setSelectedUser(e.target.value)}
-              required
+      {/* Login Card */}
+      <div style={{
+        flex: 1,
+        background: 'white',
+        borderRadius: '32px 32px 0 0',
+        padding: '36px 24px 40px',
+        boxShadow: '0 -8px 40px rgba(0, 0, 0, 0.15)'
+      }}>
+        <div style={{ maxWidth: '400px', margin: '0 auto' }}>
+          <h2 style={{
+            fontSize: '24px',
+            fontWeight: '800',
+            color: '#1F2937',
+            marginBottom: '8px',
+            textAlign: 'center'
+          }}>
+            Welcome! 👋
+          </h2>
+          <p style={{
+            fontSize: '15px',
+            color: '#6B7280',
+            marginBottom: '32px',
+            textAlign: 'center',
+            lineHeight: '1.5'
+          }}>
+            Select your account to get started
+          </p>
+
+          <form onSubmit={handleLogin}>
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '13px',
+                fontWeight: '700',
+                color: '#374151',
+                marginBottom: '10px',
+                letterSpacing: '0.5px',
+                textTransform: 'uppercase'
+              }}>
+                Your Account
+              </label>
+              <select
+                value={selectedUser}
+                onChange={(e) => setSelectedUser(e.target.value)}
+                required
+                style={{
+                  width: '100%',
+                  padding: '18px 20px',
+                  background: '#F8F7FC',
+                  border: '2px solid #E5E7EB',
+                  borderRadius: '16px',
+                  fontSize: '16px',
+                  cursor: 'pointer',
+                  fontFamily: "'Nunito Sans', sans-serif",
+                  fontWeight: '600',
+                  color: '#1F2937',
+                  outline: 'none',
+                  WebkitAppearance: 'none',
+                  appearance: 'none',
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 16px center'
+                }}
+              >
+                <option value="">Choose your account...</option>
+                <optgroup label="🎖️ Adult Leaders">
+                  {users.filter(u => u.role === 'adult').map(user => (
+                    <option key={user.id} value={user.id}>
+                      {user.name} • {user.unit}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="⚡ Scouts">
+                  {users.filter(u => u.role === 'youth').map(user => (
+                    <option key={user.id} value={user.id}>
+                      {user.name} • {user.unit}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="👨‍👩‍👧 Parents">
+                  {users.filter(u => u.role === 'parent').map(user => (
+                    <option key={user.id} value={user.id}>
+                      {user.name} • {user.unit}
+                    </option>
+                  ))}
+                </optgroup>
+              </select>
+            </div>
+
+            <button
+              type="submit"
+              disabled={!selectedUser}
               style={{
                 width: '100%',
-                padding: '16px 18px',
-                background: '#F9FAFB',
-                border: '2px solid #E5E7EB',
-                borderRadius: '14px',
-                fontSize: '15px',
-                cursor: 'pointer',
-                fontFamily: "'Noto Sans', sans-serif",
-                fontWeight: '600',
-                color: '#111827',
-                outline: 'none'
+                padding: '18px',
+                background: selectedUser 
+                  ? 'linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)' 
+                  : '#E5E7EB',
+                color: 'white',
+                border: 'none',
+                borderRadius: '16px',
+                fontSize: '17px',
+                fontWeight: '700',
+                cursor: selectedUser ? 'pointer' : 'not-allowed',
+                boxShadow: selectedUser 
+                  ? '0 8px 24px rgba(124, 58, 237, 0.35)'
+                  : 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '10px'
               }}
             >
-              <option value="">Choose your account...</option>
-              <optgroup label="🎖️ Adult Leaders">
-                {users.filter(u => u.role === 'adult').map(user => (
-                  <option key={user.id} value={user.id}>
-                    {user.name} • {user.unit}
-                  </option>
-                ))}
-              </optgroup>
-              <optgroup label="⚡ Scouts">
-                {users.filter(u => u.role === 'youth').map(user => (
-                  <option key={user.id} value={user.id}>
-                    {user.name} • {user.unit}
-                  </option>
-                ))}
-              </optgroup>
-              <optgroup label="👥 Parents">
-                {users.filter(u => u.role === 'parent').map(user => (
-                  <option key={user.id} value={user.id}>
-                    {user.name} • {user.unit}
-                  </option>
-                ))}
-              </optgroup>
-            </select>
-          </div>
+              <LogIn size={20} />
+              Sign In
+            </button>
+          </form>
 
-          <button
-            type="submit"
-            disabled={!selectedUser}
-            style={{
-              width: '100%',
-              padding: '18px',
-              background: selectedUser 
-                ? 'linear-gradient(135deg, #CE1126 0%, #FF6B35 100%)' 
-                : '#E5E7EB',
-              color: 'white',
-              border: 'none',
-              borderRadius: '14px',
-              fontSize: '16px',
-              fontWeight: '800',
-              cursor: selectedUser ? 'pointer' : 'not-allowed',
-              boxShadow: selectedUser 
-                ? '0 8px 20px rgba(206, 17, 38, 0.3)'
-                : 'none',
-              letterSpacing: '1px',
-              textTransform: 'uppercase'
-            }}
-          >
-            Launch Hub 🚀
-          </button>
-        </form>
-
-        {/* Demo Notice */}
-        <div style={{ 
-          marginTop: '32px', 
-          padding: '18px', 
-          background: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)', 
-          borderRadius: '12px',
-          border: '1px solid #FCD34D'
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '12px'
+          {/* Demo Notice */}
+          <div style={{ 
+            marginTop: '28px', 
+            padding: '20px', 
+            background: 'linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%)', 
+            borderRadius: '16px'
           }}>
-            <span style={{ fontSize: '24px', flexShrink: 0 }}>⚡</span>
-            <div>
-              <p style={{ 
-                fontSize: '12px', 
-                color: '#92400E', 
-                margin: '0 0 6px 0',
-                fontWeight: '700',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px'
+            <div style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '14px'
+            }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                background: 'linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)',
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
               }}>
-                Demo Mode
-              </p>
-              <p style={{ 
-                fontSize: '13px', 
-                color: '#78350F', 
-                margin: 0,
-                lineHeight: '1.6'
-              }}>
-                Try different roles to see YPT-compliant access control. Each account has unique permissions!
-              </p>
+                <Sparkles size={20} color="white" />
+              </div>
+              <div>
+                <p style={{ 
+                  fontSize: '14px', 
+                  color: '#5B21B6', 
+                  margin: '0 0 6px 0',
+                  fontWeight: '700'
+                }}>
+                  Demo Mode
+                </p>
+                <p style={{ 
+                  fontSize: '14px', 
+                  color: '#6D28D9', 
+                  margin: 0,
+                  lineHeight: '1.5'
+                }}>
+                  Try different roles to see YPT-compliant access control. Each account has unique permissions!
+                </p>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Platypus & Fox Footer */}
-        <div style={{
-          marginTop: '32px',
-          textAlign: 'center',
-          paddingTop: '28px',
-          borderTop: '1px solid #E5E7EB'
-        }}>
-          <p style={{
-            fontSize: '10px',
-            color: '#9CA3AF',
-            margin: '0 0 8px 0',
-            fontWeight: '600',
-            textTransform: 'uppercase',
-            letterSpacing: '1.5px'
+          {/* Footer */}
+          <div style={{
+            marginTop: '32px',
+            textAlign: 'center'
           }}>
-            Powered by
-          </p>
-          <img 
-            src="/platypus-fox-logo.png" 
-            alt="Platypus & Fox" 
-            style={{ 
-              height: '32px',
-              marginBottom: '8px'
-            }} 
-          />
-          <p style={{
-            fontSize: '12px',
-            color: '#6B7280',
-            margin: 0,
-            fontStyle: 'italic'
-          }}>
-            Powered by Patypus & Fox
-          </p>
+            <p style={{
+              fontSize: '13px',
+              color: '#9CA3AF',
+              margin: 0,
+              fontWeight: '600'
+            }}>
+              🛡️ YPT Compliant Communication
+            </p>
+          </div>
         </div>
       </div>
     </div>

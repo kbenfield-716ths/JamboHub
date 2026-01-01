@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar as CalendarIcon, ExternalLink, Clock, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar as CalendarIcon, ExternalLink, Clock, MapPin } from 'lucide-react';
 import { schedule } from '../data/mockData';
 
 export default function Calendar() {
@@ -20,60 +20,57 @@ export default function Calendar() {
       height: '100%',
       display: 'flex',
       flexDirection: 'column',
-      background: '#FAFAFA'
+      background: '#F8F7FC'
     }}>
       {/* Header */}
       <div style={{
-        padding: '20px',
+        padding: '20px 16px',
         background: 'white',
-        borderBottom: '1px solid rgba(0,0,0,0.06)',
+        borderBottom: '2px solid #F3F4F6',
         flexShrink: 0
       }}>
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
-          maxWidth: '800px',
-          margin: '0 auto',
-          width: '100%'
+          justifyContent: 'space-between'
         }}>
           <div>
             <h2 style={{
-              fontSize: '18px',
-              fontWeight: '600',
-              color: '#1a1a1a',
+              fontSize: '20px',
+              fontWeight: '700',
+              color: '#1F2937',
               margin: 0,
               letterSpacing: '-0.3px'
             }}>
               Jamboree 2025
             </h2>
             <p style={{
-              fontSize: '13px',
-              color: '#888',
-              margin: '4px 0 0 0'
+              fontSize: '14px',
+              color: '#6B7280',
+              margin: '4px 0 0 0',
+              fontWeight: '500'
             }}>
-              July 20 – 30, 2025
+              July 20 – 30
             </p>
           </div>
           
           <button
             onClick={() => setShowGoogleCalendar(!showGoogleCalendar)}
             style={{
-              padding: '8px 14px',
-              background: '#F5F5F5',
+              padding: '10px 16px',
+              background: 'linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%)',
               border: 'none',
-              borderRadius: '8px',
-              color: '#555',
+              borderRadius: '12px',
+              color: '#7C3AED',
               cursor: 'pointer',
-              fontSize: '13px',
-              fontWeight: '500',
+              fontSize: '14px',
+              fontWeight: '700',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
-              transition: 'all 0.2s ease'
+              gap: '8px'
             }}
           >
-            <CalendarIcon size={14} />
+            <CalendarIcon size={16} />
             {showGoogleCalendar ? 'List' : 'Calendar'}
           </button>
         </div>
@@ -82,51 +79,49 @@ export default function Calendar() {
       {/* Content */}
       <div style={{ flex: 1, overflow: 'hidden' }}>
         {showGoogleCalendar ? (
-          <div style={{ height: '100%', padding: '20px', background: 'white' }}>
-            <div style={{ height: '100%', maxWidth: '1000px', margin: '0 auto' }}>
-              <iframe
-                src={GOOGLE_CALENDAR_EMBED}
+          <div style={{ height: '100%', padding: '16px', background: 'white' }}>
+            <iframe
+              src={GOOGLE_CALENDAR_EMBED}
+              style={{
+                border: 'none',
+                width: '100%',
+                height: 'calc(100% - 60px)',
+                borderRadius: '16px',
+                boxShadow: '0 4px 16px rgba(124, 58, 237, 0.1)'
+              }}
+              title="Google Calendar"
+            />
+            <div style={{ marginTop: '16px', textAlign: 'center' }}>
+              <a
+                href={`https://calendar.google.com/calendar/u/0?cid=${GOOGLE_CALENDAR_ID}`}
+                target="_blank"
+                rel="noopener noreferrer"
                 style={{
-                  border: 'none',
-                  width: '100%',
-                  height: 'calc(100% - 50px)',
-                  borderRadius: '12px',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  color: '#7C3AED',
+                  textDecoration: 'none',
+                  fontSize: '15px',
+                  fontWeight: '600'
                 }}
-                title="Google Calendar"
-              />
-              <div style={{ marginTop: '16px', textAlign: 'center' }}>
-                <a
-                  href={`https://calendar.google.com/calendar/u/0?cid=${GOOGLE_CALENDAR_ID}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    color: '#666',
-                    textDecoration: 'none',
-                    fontSize: '13px',
-                    fontWeight: '500'
-                  }}
-                >
-                  Add to your calendar
-                  <ExternalLink size={12} />
-                </a>
-              </div>
+              >
+                Add to your calendar
+                <ExternalLink size={14} />
+              </a>
             </div>
           </div>
         ) : (
           <div style={{ height: '100%', overflowY: 'auto' }}>
-            <div style={{ maxWidth: '800px', margin: '0 auto', padding: '16px' }}>
+            <div style={{ padding: '16px' }}>
               
-              {/* Day Selector */}
+              {/* Day Selector - Scrollable Pills */}
               <div style={{
                 display: 'flex',
-                gap: '8px',
+                gap: '10px',
                 marginBottom: '20px',
                 overflowX: 'auto',
-                padding: '4px 0',
+                padding: '4px 0 8px',
                 WebkitOverflowScrolling: 'touch'
               }}>
                 {days.map(({ day, date }) => (
@@ -134,46 +129,57 @@ export default function Calendar() {
                     key={day}
                     onClick={() => setSelectedDay(day)}
                     style={{
-                      minWidth: '56px',
-                      padding: '12px 8px',
-                      background: selectedDay === day ? '#1a1a1a' : 'white',
-                      color: selectedDay === day ? 'white' : '#666',
+                      minWidth: '64px',
+                      padding: '14px 10px',
+                      background: selectedDay === day 
+                        ? 'linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)' 
+                        : 'white',
+                      color: selectedDay === day ? 'white' : '#6B7280',
                       border: 'none',
-                      borderRadius: '12px',
-                      fontSize: '13px',
-                      fontWeight: '600',
+                      borderRadius: '16px',
+                      fontSize: '14px',
+                      fontWeight: '700',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                       flexShrink: 0,
-                      boxShadow: selectedDay === day ? '0 4px 12px rgba(0,0,0,0.15)' : '0 1px 3px rgba(0,0,0,0.08)'
+                      boxShadow: selectedDay === day 
+                        ? '0 8px 20px rgba(124, 58, 237, 0.3)' 
+                        : '0 2px 8px rgba(0,0,0,0.06)'
                     }}
                   >
-                    <div style={{ fontSize: '10px', opacity: 0.7, marginBottom: '4px' }}>{date}</div>
-                    <div style={{ fontSize: '16px' }}>{day}</div>
+                    <div style={{ 
+                      fontSize: '11px', 
+                      opacity: selectedDay === day ? 0.9 : 0.7, 
+                      marginBottom: '4px',
+                      fontWeight: '600'
+                    }}>
+                      {date}
+                    </div>
+                    <div style={{ fontSize: '20px' }}>{day}</div>
                   </button>
                 ))}
               </div>
 
-              {/* Selected Day Info */}
+              {/* Selected Day Header */}
               <div style={{
                 marginBottom: '16px',
-                padding: '16px 20px',
+                padding: '18px 20px',
                 background: 'white',
-                borderRadius: '12px',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.06)'
+                borderRadius: '16px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
               }}>
                 <h3 style={{
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  color: '#1a1a1a',
+                  fontSize: '18px',
+                  fontWeight: '700',
+                  color: '#1F2937',
                   margin: 0
                 }}>
-                  {days[selectedDay - 1]?.fullDate} — Day {selectedDay}
+                  📅 {days[selectedDay - 1]?.fullDate} — Day {selectedDay}
                 </h3>
               </div>
 
               {/* Events */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {schedule.map((event) => (
                   <EventCard key={event.id} event={event} />
                 ))}
@@ -182,57 +188,58 @@ export default function Calendar() {
               {/* Subscribe CTA */}
               <div style={{
                 marginTop: '24px',
-                padding: '24px',
+                padding: '28px 20px',
                 background: 'white',
-                borderRadius: '12px',
+                borderRadius: '20px',
                 textAlign: 'center',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.06)'
+                boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
               }}>
                 <div style={{
-                  width: '48px',
-                  height: '48px',
-                  background: '#F5F5F5',
-                  borderRadius: '12px',
+                  width: '64px',
+                  height: '64px',
+                  background: 'linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%)',
+                  borderRadius: '20px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   margin: '0 auto 16px'
                 }}>
-                  <CalendarIcon size={22} color="#666" />
+                  <CalendarIcon size={28} color="#7C3AED" />
                 </div>
                 <h4 style={{
-                  fontSize: '15px',
-                  fontWeight: '600',
-                  color: '#1a1a1a',
-                  margin: '0 0 6px 0'
+                  fontSize: '18px',
+                  fontWeight: '700',
+                  color: '#1F2937',
+                  margin: '0 0 8px 0'
                 }}>
                   Stay Updated
                 </h4>
                 <p style={{
-                  fontSize: '13px',
-                  color: '#888',
-                  margin: '0 0 16px 0',
+                  fontSize: '15px',
+                  color: '#6B7280',
+                  margin: '0 0 20px 0',
                   lineHeight: '1.5'
                 }}>
-                  Subscribe to get automatic updates when the schedule changes
+                  Subscribe for automatic schedule updates
                 </p>
                 <button
                   onClick={() => setShowGoogleCalendar(true)}
                   style={{
-                    padding: '10px 20px',
-                    background: '#1a1a1a',
+                    padding: '14px 24px',
+                    background: 'linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)',
                     color: 'white',
                     border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '13px',
-                    fontWeight: '600',
+                    borderRadius: '14px',
+                    fontSize: '15px',
+                    fontWeight: '700',
                     cursor: 'pointer',
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: '8px'
+                    gap: '10px',
+                    boxShadow: '0 8px 20px rgba(124, 58, 237, 0.3)'
                   }}
                 >
-                  <CalendarIcon size={14} />
+                  <CalendarIcon size={18} />
                   View Full Calendar
                 </button>
               </div>
@@ -248,15 +255,15 @@ function EventCard({ event }) {
   const getTypeStyles = (type) => {
     switch(type) {
       case 'meal': 
-        return { bg: '#ECFDF5', color: '#059669', dot: '#10B981' };
+        return { bg: '#ECFDF5', color: '#059669', accent: '#10B981' };
       case 'activity': 
-        return { bg: '#EFF6FF', color: '#2563EB', dot: '#3B82F6' };
+        return { bg: '#EFF6FF', color: '#2563EB', accent: '#3B82F6' };
       case 'event': 
-        return { bg: '#FEF2F2', color: '#DC2626', dot: '#EF4444' };
+        return { bg: '#FEF2F2', color: '#DC2626', accent: '#EF4444' };
       case 'leadership': 
-        return { bg: '#F5F5F5', color: '#525252', dot: '#737373' };
+        return { bg: '#EDE9FE', color: '#7C3AED', accent: '#A855F7' };
       default: 
-        return { bg: '#F5F5F5', color: '#525252', dot: '#737373' };
+        return { bg: '#F3F4F6', color: '#525252', accent: '#737373' };
     }
   };
 
@@ -264,31 +271,33 @@ function EventCard({ event }) {
 
   return (
     <div style={{
-      padding: '16px',
+      padding: '18px',
       background: 'white',
-      borderRadius: '12px',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+      borderRadius: '16px',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
       display: 'flex',
-      gap: '14px'
+      gap: '16px',
+      borderLeft: `4px solid ${styles.accent}`
     }}>
-      {/* Time indicator */}
+      {/* Time */}
       <div style={{
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        minWidth: '50px'
+        minWidth: '60px'
       }}>
         <div style={{
-          width: '8px',
-          height: '8px',
+          width: '10px',
+          height: '10px',
           borderRadius: '50%',
-          background: styles.dot,
-          marginBottom: '6px'
+          background: styles.accent,
+          marginBottom: '8px',
+          boxShadow: `0 2px 8px ${styles.accent}40`
         }} />
         <span style={{
-          fontSize: '12px',
-          fontWeight: '600',
-          color: '#888'
+          fontSize: '14px',
+          fontWeight: '700',
+          color: '#6B7280'
         }}>
           {event.time}
         </span>
@@ -298,28 +307,29 @@ function EventCard({ event }) {
       <div style={{ flex: 1 }}>
         <div style={{
           display: 'flex',
-          alignItems: 'center',
+          alignItems: 'flex-start',
           justifyContent: 'space-between',
           gap: '12px',
-          marginBottom: '6px'
+          marginBottom: '8px'
         }}>
           <h4 style={{
-            fontSize: '14px',
-            fontWeight: '600',
-            color: '#1a1a1a',
-            margin: 0
+            fontSize: '16px',
+            fontWeight: '700',
+            color: '#1F2937',
+            margin: 0,
+            lineHeight: '1.3'
           }}>
             {event.title}
           </h4>
           <span style={{
-            padding: '3px 8px',
+            padding: '4px 10px',
             background: styles.bg,
             color: styles.color,
-            fontSize: '10px',
-            fontWeight: '600',
-            borderRadius: '4px',
+            fontSize: '11px',
+            fontWeight: '700',
+            borderRadius: '6px',
             textTransform: 'uppercase',
-            letterSpacing: '0.3px',
+            letterSpacing: '0.5px',
             flexShrink: 0
           }}>
             {event.type}
@@ -330,21 +340,21 @@ function EventCard({ event }) {
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '5px',
-            fontSize: '12px',
-            color: '#888',
-            marginBottom: '4px'
+            gap: '6px',
+            fontSize: '14px',
+            color: '#6B7280',
+            marginBottom: '6px'
           }}>
-            <MapPin size={11} />
+            <MapPin size={14} />
             {event.location}
           </div>
         )}
         
         {event.description && (
           <p style={{
-            fontSize: '13px',
-            color: '#666',
-            margin: '8px 0 0 0',
+            fontSize: '14px',
+            color: '#6B7280',
+            margin: '10px 0 0 0',
             lineHeight: '1.5'
           }}>
             {event.description}

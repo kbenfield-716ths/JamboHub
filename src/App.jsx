@@ -49,85 +49,81 @@ export default function App() {
       height: '100vh',
       display: 'flex',
       flexDirection: 'column',
-      background: '#FAFAFA',
-      fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif"
+      background: '#F8F7FC',
+      fontFamily: "'Nunito Sans', -apple-system, BlinkMacSystemFont, sans-serif"
     }}>
-      {/* Minimal Top Bar */}
+      {/* Top Bar - Vibrant Purple */}
       <header style={{
-        height: '56px',
-        background: 'white',
+        minHeight: '60px',
+        background: 'linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '0 16px',
-        flexShrink: 0,
-        borderBottom: '1px solid rgba(0,0,0,0.06)'
+        flexShrink: 0
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           {activeView === 'messages' && (
             <button
               onClick={() => setShowChannelList(!showChannelList)}
               style={{
-                width: '40px',
-                height: '40px',
-                background: showChannelList ? '#1a1a1a' : 'transparent',
+                width: '44px',
+                height: '44px',
+                background: showChannelList ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.15)',
                 border: 'none',
-                borderRadius: '10px',
+                borderRadius: '12px',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: showChannelList ? 'white' : '#666',
-                transition: 'all 0.2s ease'
+                color: 'white'
               }}
             >
-              {showChannelList ? <X size={20} /> : <Menu size={20} />}
+              {showChannelList ? <X size={22} /> : <Menu size={22} />}
             </button>
           )}
           
           <div>
             <h1 style={{
-              fontSize: '15px',
-              fontWeight: '600',
+              fontSize: '18px',
+              fontWeight: '700',
               margin: 0,
-              color: '#1a1a1a',
-              letterSpacing: '-0.2px'
+              color: 'white',
+              letterSpacing: '-0.3px'
             }}>
               {activeView === 'messages' && activeChannel ? activeChannel.name : 
                activeView === 'calendar' ? 'Schedule' :
                activeView === 'info' ? 'Information' : 'JamboHub'}
             </h1>
+            <p style={{
+              fontSize: '13px',
+              margin: '2px 0 0 0',
+              color: 'rgba(255,255,255,0.85)',
+              fontWeight: '500'
+            }}>
+              {currentUser.name}
+            </p>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{
-            fontSize: '13px',
-            color: '#888',
-            fontWeight: '500'
-          }}>
-            {currentUser.name}
-          </span>
-          <button
-            onClick={handleLogout}
-            style={{
-              width: '36px',
-              height: '36px',
-              background: 'transparent',
-              border: 'none',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#999',
-              transition: 'all 0.2s ease'
-            }}
-            title="Sign out"
-          >
-            <LogOut size={18} />
-          </button>
-        </div>
+        <button
+          onClick={handleLogout}
+          style={{
+            width: '40px',
+            height: '40px',
+            background: 'rgba(255,255,255,0.15)',
+            border: 'none',
+            borderRadius: '10px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white'
+          }}
+          title="Sign out"
+        >
+          <LogOut size={18} />
+        </button>
       </header>
 
       {/* Main Content Area */}
@@ -139,17 +135,17 @@ export default function App() {
       }}>
         {activeView === 'messages' ? (
           <>
-            {/* Channel Sidebar - Slide in */}
+            {/* Channel Sidebar */}
             <aside style={{
-              width: showChannelList ? '260px' : '0',
+              width: showChannelList ? '280px' : '0',
               flexShrink: 0,
               background: 'white',
               transition: 'width 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
               overflow: 'hidden',
-              borderRight: showChannelList ? '1px solid rgba(0,0,0,0.06)' : 'none',
-              position: window.innerWidth < 768 ? 'absolute' : 'relative',
+              position: 'absolute',
               height: '100%',
-              zIndex: 20
+              zIndex: 20,
+              boxShadow: showChannelList ? '4px 0 20px rgba(124, 58, 237, 0.1)' : 'none'
             }}>
               {showChannelList && (
                 <ChannelList
@@ -180,31 +176,31 @@ export default function App() {
         )}
       </div>
 
-      {/* Bottom Navigation - Clean and subtle */}
+      {/* Bottom Navigation - Modern Tab Bar */}
       <nav style={{
-        height: '64px',
+        height: '70px',
         background: 'white',
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'stretch',
         justifyContent: 'space-around',
         flexShrink: 0,
         paddingBottom: 'env(safe-area-inset-bottom)',
-        borderTop: '1px solid rgba(0,0,0,0.06)'
+        boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.06)'
       }}>
         <NavButton
-          icon={<MessageSquare size={22} />}
+          icon={<MessageSquare size={24} />}
           label="Messages"
           active={activeView === 'messages'}
           onClick={() => handleViewChange('messages')}
         />
         <NavButton
-          icon={<CalendarIcon size={22} />}
+          icon={<CalendarIcon size={24} />}
           label="Schedule"
           active={activeView === 'calendar'}
           onClick={() => handleViewChange('calendar')}
         />
         <NavButton
-          icon={<InfoIcon size={22} />}
+          icon={<InfoIcon size={24} />}
           label="Info"
           active={activeView === 'info'}
           onClick={() => handleViewChange('info')}
@@ -212,16 +208,16 @@ export default function App() {
       </nav>
 
       {/* Mobile overlay */}
-      {showChannelList && window.innerWidth < 768 && (
+      {showChannelList && (
         <div
           onClick={() => setShowChannelList(false)}
           style={{
             position: 'fixed',
-            top: '56px',
+            top: '60px',
             left: 0,
             right: 0,
-            bottom: '64px',
-            background: 'rgba(0, 0, 0, 0.3)',
+            bottom: '70px',
+            background: 'rgba(124, 58, 237, 0.2)',
             backdropFilter: 'blur(4px)',
             zIndex: 10
           }}
@@ -237,8 +233,7 @@ function NavButton({ icon, label, active, onClick }) {
       onClick={onClick}
       style={{
         flex: 1,
-        height: '100%',
-        maxWidth: '120px',
+        maxWidth: '100px',
         background: 'transparent',
         border: 'none',
         cursor: 'pointer',
@@ -246,10 +241,10 @@ function NavButton({ icon, label, active, onClick }) {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: '4px',
-        color: active ? '#1a1a1a' : '#aaa',
+        gap: '6px',
+        color: active ? '#7C3AED' : '#9CA3AF',
         position: 'relative',
-        transition: 'color 0.2s ease'
+        padding: '8px 0'
       }}
     >
       {active && (
@@ -258,22 +253,23 @@ function NavButton({ icon, label, active, onClick }) {
           top: 0,
           left: '50%',
           transform: 'translateX(-50%)',
-          width: '32px',
-          height: '3px',
-          background: '#1a1a1a',
-          borderRadius: '0 0 3px 3px'
+          width: '40px',
+          height: '4px',
+          background: 'linear-gradient(90deg, #7C3AED, #A855F7)',
+          borderRadius: '0 0 4px 4px'
         }} />
       )}
       <div style={{
-        opacity: active ? 1 : 0.6,
-        transform: active ? 'scale(1.05)' : 'scale(1)',
+        padding: '8px',
+        borderRadius: '12px',
+        background: active ? 'rgba(124, 58, 237, 0.1)' : 'transparent',
         transition: 'all 0.2s ease'
       }}>
         {icon}
       </div>
       <span style={{
-        fontSize: '11px',
-        fontWeight: active ? '600' : '500',
+        fontSize: '12px',
+        fontWeight: active ? '700' : '600',
         letterSpacing: '0.2px'
       }}>
         {label}
