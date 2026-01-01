@@ -1,15 +1,12 @@
-import React from 'react';
-import { getUserChannels, getYPTWarnings } from '../lib/auth';
-import { Hash, Users, Crown, Heart } from 'lucide-react';
+import { Hash, Users, Crown, Heart, Shield } from 'lucide-react';
 
-export default function ChannelList({ user, channels, activeChannel, onChannelSelect }) {
-  const userChannels = getUserChannels(user, channels);
-
+export default function ChannelList({ channels, selectedChannel, onSelectChannel, currentUser }) {
+  // Group channels by type
   const groupedChannels = {
-    public: userChannels.filter(c => c.type === 'public'),
-    unit: userChannels.filter(c => c.type === 'unit'),
-    leadership: userChannels.filter(c => c.type === 'leadership'),
-    parent: userChannels.filter(c => c.type === 'parent')
+    public: channels.filter(c => c.type === 'public'),
+    unit: channels.filter(c => c.type === 'unit'),
+    leadership: channels.filter(c => c.type === 'leadership'),
+    parent: channels.filter(c => c.type === 'parent')
   };
 
   const getGroupIcon = (type) => {
@@ -32,13 +29,22 @@ export default function ChannelList({ user, channels, activeChannel, onChannelSe
     }
   };
 
+  const getRoleBadge = (role) => {
+    switch(role) {
+      case 'admin': return { label: 'Admin', color: '#DC2626', bg: '#FEF2F2' };
+      case 'adult': return { label: 'Leader', color: '#7C3AED', bg: '#EDE9FE' };
+      case 'youth': return { label: 'Scout', color: '#059669', bg: '#ECFDF5' };
+      case 'parent': return { label: 'Parent', color: '#D97706', bg: '#FEF3C7' };
+      default: return { label: 'Member', color: '#6B7280', bg: '#F3F4F6' };
+    }
+  };
+
   const ChannelItem = ({ channel }) => {
-    const warnings = getYPTWarnings(channel);
-    const isActive = activeChannel?.id === channel.id;
+    const isActive = selectedChannel?.id === channel.id;
 
     return (
       <button
-        onClick={() => onChannelSelect(channel)}
+        onClick={() => onSelectChannel(channel)}
         style={{
           width: 'calc(100% - 24px)',
           padding: '14px 16px',
@@ -74,17 +80,16 @@ export default function ChannelList({ user, channels, activeChannel, onChannelSe
           }}>
             {channel.name}
           </div>
-          {warnings.length > 0 && (
+          {channel.description && (
             <div style={{ 
               fontSize: '12px', 
-              color: '#DC2626', 
-              marginTop: '4px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              fontWeight: '600'
+              color: '#6B7280', 
+              marginTop: '2px',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
             }}>
-              ⚠️ {warnings[0]}
+              {channel.description}
             </div>
           )}
         </div>
@@ -132,6 +137,8 @@ export default function ChannelList({ user, channels, activeChannel, onChannelSe
     );
   };
 
+  const badge = getRoleBadge(currentUser?.role);
+
   return (
     <div style={{
       height: '100%',
@@ -165,24 +172,45 @@ export default function ChannelList({ user, channels, activeChannel, onChannelSe
             fontWeight: '700',
             fontSize: '22px'
           }}>
-            {user.name.charAt(0)}
+            {currentUser?.role === 'admin' ? <Shield size={24} /> : currentUser?.name?.charAt(0) || '?'}
           </div>
           <div>
             <div style={{
               fontSize: '18px',
               fontWeight: '700',
-              color: 'white'
+              color: 'white',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
             }}>
-              {user.name}
+              {currentUser?.name || 'User'}
             </div>
             <div style={{
-              fontSize: '14px',
-              color: 'rgba(255,255,255,0.85)',
-              marginTop: '4px',
-              textTransform: 'capitalize',
-              fontWeight: '500'
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              marginTop: '6px'
             }}>
-              {user.role}
+              <span style={{
+                padding: '3px 10px',
+                background: 'rgba(255,255,255,0.25)',
+                borderRadius: '6px',
+                fontSize: '12px',
+                color: 'white',
+                fontWeight: '700',
+                textTransform: 'uppercase'
+              }}>
+                {badge.label}
+              </span>
+              {currentUser?.unit && (
+                <span style={{
+                  fontSize: '13px',
+                  color: 'rgba(255,255,255,0.85)',
+                  fontWeight: '500'
+                }}>
+                  {currentUser.unit}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -191,7 +219,7 @@ export default function ChannelList({ user, channels, activeChannel, onChannelSe
       {/* Channels */}
       <div style={{ padding: '8px 0', flex: 1 }}>
         <ChannelGroup title="Announcements" type="public" channels={groupedChannels.public} />
-        <ChannelGroup title="Your Unit" type="unit" channels={groupedChannels.unit} />
+        <ChannelGroup title="Units" type="unit" channels={groupedChannels.unit} />
         <ChannelGroup title="Leadership" type="leadership" channels={groupedChannels.leadership} />
         <ChannelGroup title="Family" type="parent" channels={groupedChannels.parent} />
       </div>
@@ -212,7 +240,7 @@ export default function ChannelList({ user, channels, activeChannel, onChannelSe
             color: '#7C3AED',
             fontWeight: '700'
           }}>
-            🏕️ VAHC Contingent 2025
+            🏕️ VAHC Contingent 2026
           </div>
         </div>
       </div>

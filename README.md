@@ -1,209 +1,229 @@
-# VAHC Jamboree Hub - MVP Demo
+# JamboHub 🏕️
 
-A minimal viable product demonstrating a YPT-compliant communication and coordination hub for the Virginia Headwaters Council contingent at Jamboree 2025.
+Communication platform for Scout Jamboree contingents. YPT-compliant messaging with role-based access control and email notifications.
 
-## What This Demo Shows
-
-This MVP demonstrates:
-
-1. **YPT-Compliant Communication**: Role-based access control ensuring Youth Protection Training compliance
-   - Two-deep leadership monitoring on all youth-accessible channels
-   - No private youth-adult direct messaging
-   - Read-only access for parents to their Scout's unit channels
-   - Age-gated leadership channels
-
-2. **Multi-Channel Architecture**: Different communication spaces for different needs
-   - Contingent-wide announcements
-   - Unit-specific channels
-   - Adult leadership coordination
-   - Family updates
-
-3. **Progressive Web App (PWA)**: Can be installed on any device
-   - Works on phones, tablets, and computers
-   - Installable like a native app
-   - Designed for offline capability (not implemented in MVP)
-
-4. **Daily Schedule & Information**: Centralized hub for activities
-   - Daily schedule with categorized events
-   - Weather information
-   - Emergency contacts
-   - Key locations
-
-## Quick Start
+## Quick Start - Deploy to Fly.io
 
 ### Prerequisites
-- Node.js 16+ installed
-- npm or yarn
 
-### Installation
+1. Install Fly CLI: `brew install flyctl`
+2. Login: `fly auth login`
+3. Install Node.js 18+
+
+### First-Time Setup
 
 ```bash
-# Install dependencies
+# 1. Create the Fly app
+cd jambohub-backend
+fly apps create jambohub
+
+# 2. Create persistent volume for database
+fly volumes create jambohub_data --region iad --size 1
+
+# 3. Set secrets (REQUIRED)
+fly secrets set JWT_SECRET="$(openssl rand -hex 32)"
+fly secrets set GMAIL_USER="your-gmail@gmail.com"
+fly secrets set GMAIL_APP_PASSWORD="your-app-password"
+```
+
+### Deploy
+
+```bash
+# Build frontend and deploy
+cd jambohub-frontend
 npm install
-
-# Start development server
-npm run dev
-
-# The app will open at http://localhost:3000
-```
-
-### Testing Different User Roles
-
-The MVP includes demo users representing different roles:
-
-**Adult Leaders:**
-- Kyle Haines (Crew 22) - Can access all channels, post anywhere
-- Sarah Thompson (Troop 3125) - Can access most channels
-- Mike Chen (Troop 114) - Adult leader access
-
-**Youth:**
-- Liam H. (Crew 22) - Can access public and Crew 22 channels
-- Alex M. (Troop 3125) - Can access public and Troop 3125 channels
-
-**Parents:**
-- Parent of Liam (Crew 22) - Read-only access to contingent news and Crew 22
-
-**Try logging in as different users to see how channel visibility and posting permissions change.**
-
-## Architecture Notes
-
-### Current MVP Implementation
-
-The MVP uses **mock data** stored in `src/data/mockData.js`. Messages aren't actually sent - they're simulated with alerts. This allows you to demonstrate the concept without backend infrastructure.
-
-**What's Included:**
-- ✅ User authentication with role-based access
-- ✅ Channel organization and visibility rules
-- ✅ YPT compliance checking and warnings
-- ✅ Message viewing with proper permissions
-- ✅ Daily schedule with activities
-- ✅ Weather and emergency contact information
-- ✅ Responsive design for mobile and desktop
-- ✅ PWA manifest for installability
-
-**What's Deferred:**
-- 🔄 Real backend (Zulip or custom)
-- 🔄 Actual message persistence
-- 🔄 Real-time updates
-- 🔄 Photo sharing
-- 🔄 Merit badge tracking
-- 🔄 Offline caching
-- 🔄 Push notifications
-
-### Next Steps for Production
-
-When you're ready to build the production version, the architecture would be:
-
-```
-┌─────────────────────────────────────────┐
-│  PWA (React/Vite) - This Frontend       │
-├─────────────────────────────────────────┤
-│  API Layer (FastAPI)                    │
-│  - Authentication                       │
-│  - YPT validation                       │
-│  - Custom services                      │
-├─────────────────────────────────────────┤
-│  Zulip (on Fly.io)                      │
-│  - Core messaging                       │
-│  - Stream management                    │
-│  - User management                      │
-├─────────────────────────────────────────┤
-│  PostgreSQL (Fly.io)                    │
-│  - User data                            │
-│  - Schedule data                        │
-│  - Emergency contacts                   │
-└─────────────────────────────────────────┘
-```
-
-## Sharing with Other Leaders
-
-### Option 1: Share the Code
-1. Zip this directory
-2. Send to other leaders with Node.js installed
-3. They run `npm install && npm run dev`
-
-### Option 2: Deploy to a Test Server
-Deploy to Netlify, Vercel, or Fly.io for easy access:
-
-```bash
-# Build for production
 npm run build
+cp -r dist/* ../jambohub-backend/static/
 
-# Deploy the 'dist' folder to your hosting service
+cd ../jambohub-backend
+fly deploy
 ```
 
-### Option 3: Screen Recording
-Record a walkthrough video showing:
-- Login as different user types
-- Channel access differences
-- Message viewing/posting permissions
-- Schedule functionality
-- YPT compliance features
+Or use the deploy script:
+```bash
+chmod +x deploy.sh
+./deploy.sh
+```
 
-## Feedback Questions for Other Leaders
+### Access
 
-When sharing with other adult leaders, ask:
+- **URL**: https://jambohub.fly.dev
+- **Default login**: admin@jambohub.org / Jambo2026!
 
-1. **User Experience**
-   - Is the interface intuitive?
-   - Would Scouts be able to use this easily?
-   - What's confusing or unclear?
+---
 
-2. **YPT Compliance**
-   - Does the two-deep leadership model feel sufficient?
-   - Are there any YPT concerns we're missing?
-   - Should parents have more/less access?
+## Architecture
 
-3. **Features**
-   - What's missing that would be essential?
-   - What features would be nice-to-have?
-   - Is the schedule view useful?
-
-4. **Logistics**
-   - How should we handle onboarding 100+ users?
-   - Who should manage channel moderation?
-   - How do we handle emergency communications?
-
-5. **Technical**
-   - Are they comfortable with a PWA vs native app?
-   - Any concerns about WiFi reliability?
-   - Thoughts on using Zulip vs building custom?
+```
+┌─────────────────┐     ┌──────────────────┐     ┌─────────────┐
+│  React Frontend │────▶│  Flask Backend   │────▶│   SQLite    │
+│  (Vite + React) │     │  (REST API)      │     │  (Fly Vol)  │
+└─────────────────┘     └────────┬─────────┘     └─────────────┘
+                                 │
+                                 ▼
+                        ┌──────────────────┐
+                        │   Gmail SMTP     │
+                        │  (Notifications) │
+                        └──────────────────┘
+```
 
 ## Project Structure
 
 ```
-jamboree-hub/
-├── public/
-│   └── manifest.json          # PWA manifest
-├── src/
-│   ├── components/
-│   │   ├── Login.jsx          # Authentication
-│   │   ├── ChannelList.jsx    # Channel sidebar
-│   │   ├── MessageView.jsx    # Message display
-│   │   └── Schedule.jsx       # Daily schedule
-│   ├── data/
-│   │   └── mockData.js        # Demo data
-│   ├── lib/
-│   │   └── auth.js            # YPT rules & permissions
-│   ├── App.jsx                # Main app component
-│   ├── main.jsx               # React entry point
-│   └── index.css              # Global styles
-├── index.html
-├── package.json
-└── vite.config.js
+jambohub/
+├── jambohub-frontend/       # React frontend
+│   ├── src/
+│   │   ├── components/      # React components
+│   │   ├── lib/api.js       # API client
+│   │   ├── App.jsx          # Main app
+│   │   └── index.css        # Styles
+│   ├── package.json
+│   ├── vite.config.js
+│   └── index.html
+│
+├── jambohub-backend/        # Flask backend
+│   ├── backend/
+│   │   ├── app.py           # Flask routes
+│   │   ├── models.py        # SQLAlchemy models
+│   │   ├── auth.py          # JWT + bcrypt
+│   │   └── email_service.py # Gmail notifications
+│   ├── static/              # Built frontend (after npm build)
+│   ├── Dockerfile
+│   ├── fly.toml
+│   └── requirements.txt
+│
+└── deploy.sh                # Deploy script
 ```
 
-## Technology Stack
+## Features
 
-- **React 18**: UI framework
-- **Vite**: Fast build tool and dev server
-- **Lucide React**: Icon library
-- **Vanilla CSS**: No framework, just inline styles for simplicity
+### Messaging
+- Real-time message polling (10s intervals)
+- Channel-based communication
+- Message pinning for important announcements
+- Role-based posting permissions
 
-## License & Notes
+### User Management
+- Email/password authentication with JWT
+- Role-based access control (Admin, Adult, Youth, Parent)
+- Unit-based channel filtering
+- Admin panel for user CRUD
 
-This is a demonstration project for VAHC Jamboree 2025 planning. Not for production use without proper backend implementation and security review.
+### Notifications
+- Email notifications when messages are posted
+- Per-user notification preferences
+- Bell icon toggle in header
 
-## Contact
+### YPT Compliance
+- All messages visible to leadership
+- Role-based channel access
+- Unit-based communication isolation
+- No private DMs between adults and youth
 
-Built by Kyle Haines for VAHC Jamboree 2025 planning.
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/login` | Login with email/password |
+| GET | `/api/auth/me` | Get current user |
+| POST | `/api/auth/change-password` | Change password |
+| GET | `/api/channels` | List accessible channels |
+| GET | `/api/channels/:id/messages` | Get channel messages |
+| POST | `/api/channels/:id/messages` | Post new message |
+| POST | `/api/messages/:id/pin` | Toggle pin status |
+| GET | `/api/admin/users` | List all users (admin) |
+| POST | `/api/admin/users` | Create user (admin) |
+| PUT | `/api/admin/users/:id` | Update user (admin) |
+| DELETE | `/api/admin/users/:id` | Delete user (admin) |
+| POST | `/api/admin/users/:id/reset-password` | Reset password (admin) |
+| PUT | `/api/settings/notifications` | Update notification prefs |
+
+## Gmail Setup for Notifications
+
+1. Create a Gmail account for JamboHub
+2. Enable 2-Factor Authentication
+3. Go to Google Account → Security → App Passwords
+4. Generate a new App Password for "Mail"
+5. Set the secret in Fly.io:
+   ```bash
+   fly secrets set GMAIL_USER="yourjambohub@gmail.com"
+   fly secrets set GMAIL_APP_PASSWORD="xxxx xxxx xxxx xxxx"
+   ```
+
+## Local Development
+
+### Backend
+```bash
+cd jambohub-backend
+pip install -r requirements.txt
+python -m backend.app
+# Runs on http://localhost:8080
+```
+
+### Frontend
+```bash
+cd jambohub-frontend
+npm install
+npm run dev
+# Runs on http://localhost:5173 with API proxy
+```
+
+## Default Users (Seeded)
+
+| Email | Role | Unit |
+|-------|------|------|
+| admin@jambohub.org | Admin | VAHC Leadership |
+| kyle.haines@vahc.org | Adult | Crew 22 |
+| sarah.thompson@vahc.org | Adult | Troop 3125 |
+| mike.chen@vahc.org | Adult | Troop 114 |
+| liam.h@vahc.org | Youth | Crew 22 |
+| alex.m@vahc.org | Youth | Troop 3125 |
+| parent.liam@vahc.org | Parent | Crew 22 |
+
+**All passwords**: `Jambo2026!`
+
+## Customization
+
+### Change Contingent Name
+Edit these files:
+- `jambohub-frontend/src/App.jsx` - Header subtitle
+- `jambohub-frontend/src/components/ChannelList.jsx` - Footer
+- `jambohub-backend/backend/email_service.py` - Email footer
+
+### Add Channels
+Edit `jambohub-backend/backend/models.py` in `seed_default_data()`:
+```python
+Channel(
+    id="newchannel",
+    name="New Channel",
+    description="Description",
+    icon="🎯",
+    type="public",  # public, unit, leadership, parent
+    allowed_roles="admin,adult,youth,parent",
+    can_post_roles="admin,adult"
+)
+```
+
+## Troubleshooting
+
+### Database Reset
+```bash
+fly ssh console
+rm /data/jambohub.db
+exit
+fly apps restart jambohub
+```
+
+### View Logs
+```bash
+fly logs
+```
+
+### Check Status
+```bash
+fly status
+```
+
+---
+
+Built for the **2026 National Jamboree** 🏕️
