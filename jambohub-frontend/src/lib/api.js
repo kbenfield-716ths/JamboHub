@@ -97,6 +97,13 @@ export async function getChannels() {
   return apiRequest('/api/channels');
 }
 
+export async function updateChannel(channelId, data) {
+  return apiRequest(`/api/admin/channels/${channelId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data)
+  });
+}
+
 // ==========================================
 // MESSAGES
 // ==========================================
@@ -105,11 +112,29 @@ export async function getMessages(channelId) {
   return apiRequest(`/api/channels/${channelId}/messages`);
 }
 
-export async function postMessage(channelId, content) {
+export async function postMessage(channelId, content, imageUrl = null) {
   return apiRequest(`/api/channels/${channelId}/messages`, {
     method: 'POST',
-    body: JSON.stringify({ content })
+    body: JSON.stringify({ content, imageUrl })
   });
+}
+
+export async function uploadImage(formData) {
+  const token = localStorage.getItem('jambohub-token');
+  const response = await fetch(`${API_BASE}/api/upload`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    },
+    body: formData
+  });
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || 'Upload failed');
+  }
+  
+  return response.json();
 }
 
 export async function togglePinMessage(messageId) {
@@ -229,4 +254,42 @@ export async function deleteInfoCard(cardId) {
   return apiRequest(`/api/admin/info-cards/${cardId}`, {
     method: 'DELETE'
   });
+}
+
+// ==========================================
+// PUSH NOTIFICATIONS
+// ==========================================
+
+export async function getVapidPublicKey() {
+  return apiRequest('/api/push/vapid-public-key');
+}
+
+export async function subscribeToPush(subscription) {
+  return apiRequest('/api/push/subscribe', {
+    method: 'POST',
+    body: JSON.stringify(subscription)
+  });
+}
+
+export async function unsubscribeFromPush(endpoint) {
+  return apiRequest('/api/push/unsubscribe', {
+    method: 'POST',
+    body: JSON.stringify({ endpoint })
+  });
+}
+
+// Helper to convert VAPID key from base64 to Uint8Array
+export function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/-/g, '+')
+    .replace(/_/g, '/');
+  
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
 }

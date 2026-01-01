@@ -1,6 +1,6 @@
 import React from 'react';
 import { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, Send, Pin, RefreshCw } from 'lucide-react';
+import { ChevronLeft, Send, Pin, RefreshCw, Image, X, Loader2 } from 'lucide-react';
 import * as api from '../lib/api';
 
 export default function MessageView({ channel, currentUser, onBack }) {
@@ -9,8 +9,13 @@ export default function MessageView({ channel, currentUser, onBack }) {
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [viewingImage, setViewingImage] = useState(null);
   const messagesEndRef = useRef(null);
   const pollIntervalRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   // Fetch messages when channel changes
   useEffect(() => {
@@ -50,20 +55,66 @@ export default function MessageView({ channel, currentUser, onBack }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      setError('Please select a JPG, PNG, GIF, or WebP image');
+      return;
+    }
+
+    // Validate file size (10MB max)
+    if (file.size > 10 * 1024 * 1024) {
+      setError('Image must be less than 10MB');
+      return;
+    }
+
+    setSelectedImage(file);
+    setImagePreview(URL.createObjectURL(file));
+    setError('');
+  };
+
+  const clearImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleSend = async () => {
-    if (!newMessage.trim() || sending) return;
+    if ((!newMessage.trim() && !selectedImage) || sending) return;
 
     setSending(true);
+    setUploading(!!selectedImage);
+
     try {
-      const message = await api.postMessage(channel.id, newMessage.trim());
+      let imageUrl = null;
+
+      // Upload image first if selected
+      if (selectedImage) {
+        const formData = new FormData();
+        formData.append('file', selectedImage);
+        
+        const uploadResult = await api.uploadImage(formData);
+        imageUrl = uploadResult.url;
+      }
+
+      // Post message with optional image
+      const message = await api.postMessage(channel.id, newMessage.trim(), imageUrl);
       setMessages(prev => [...prev, message]);
       setNewMessage('');
+      clearImage();
       setError('');
     } catch (err) {
       console.error('Failed to send message:', err);
       setError(err.message || 'Failed to send message');
     } finally {
       setSending(false);
+      setUploading(false);
     }
   };
 
@@ -77,7 +128,6 @@ export default function MessageView({ channel, currentUser, onBack }) {
   const handleTogglePin = async (messageId) => {
     try {
       await api.togglePinMessage(messageId);
-      // Refresh messages to get updated pin status
       fetchMessages();
     } catch (err) {
       console.error('Failed to toggle pin:', err);
@@ -110,7 +160,7 @@ export default function MessageView({ channel, currentUser, onBack }) {
   const getRoleBadge = (role) => {
     const badges = {
       admin: { label: 'Admin', color: '#DC2626', bg: '#FEE2E2' },
-      adult: { label: 'Leader', color: '#7C3AED', bg: '#EDE9FE' },
+      adult_leader: { label: 'Leader', color: '#7C3AED', bg: '#EDE9FE' },
       youth: { label: 'Scout', color: '#059669', bg: '#D1FAE5' },
       parent: { label: 'Parent', color: '#D97706', bg: '#FEF3C7' }
     };
@@ -118,7 +168,9 @@ export default function MessageView({ channel, currentUser, onBack }) {
   };
 
   const canPost = channel?.canPost || currentUser?.role === 'admin';
-  const canPin = currentUser?.role === 'admin' || currentUser?.role === 'adult';
+  const canPin = currentUser?.role === 'admin' || currentUser?.role === 'adult_leader';
+  // Allow photos in family-type channels or all channels for admins/leaders
+  const canUploadPhotos = currentUser?.role === 'admin' || currentUser?.role === 'adult_leader' || currentUser?.role === 'parent';
 
   if (!channel) {
     return (
@@ -302,7 +354,7 @@ export default function MessageView({ channel, currentUser, onBack }) {
                 <div
                   style={{
                     maxWidth: '85%',
-                    padding: '12px 16px',
+                    padding: message.imageUrl ? '8px' : '12px 16px',
                     borderRadius: isOwn ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
                     background: isOwn 
                       ? 'linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)' 
@@ -312,21 +364,43 @@ export default function MessageView({ channel, currentUser, onBack }) {
                     position: 'relative'
                   }}
                 >
-                  <div style={{ 
-                    fontSize: '15px', 
-                    lineHeight: '1.5',
-                    whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-word'
-                  }}>
-                    {message.content}
-                  </div>
+                  {/* Image */}
+                  {message.imageUrl && (
+                    <img 
+                      src={message.imageUrl} 
+                      alt="Shared image"
+                      onClick={() => setViewingImage(message.imageUrl)}
+                      style={{
+                        maxWidth: '100%',
+                        maxHeight: '300px',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        display: 'block',
+                        marginBottom: message.content ? '8px' : '0'
+                      }}
+                    />
+                  )}
+                  
+                  {/* Text content */}
+                  {message.content && (
+                    <div style={{ 
+                      fontSize: '15px', 
+                      lineHeight: '1.5',
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-word',
+                      padding: message.imageUrl ? '4px 8px' : '0'
+                    }}>
+                      {message.content}
+                    </div>
+                  )}
                   
                   <div style={{
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     marginTop: '6px',
-                    gap: '8px'
+                    gap: '8px',
+                    padding: message.imageUrl ? '0 8px 4px' : '0'
                   }}>
                     <span style={{
                       fontSize: '11px',
@@ -361,6 +435,48 @@ export default function MessageView({ channel, currentUser, onBack }) {
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Image preview */}
+      {imagePreview && (
+        <div style={{
+          padding: '8px 16px',
+          background: '#f3f4f6',
+          borderTop: '1px solid #e5e7eb'
+        }}>
+          <div style={{ position: 'relative', display: 'inline-block' }}>
+            <img 
+              src={imagePreview} 
+              alt="Preview" 
+              style={{ 
+                maxHeight: '100px', 
+                maxWidth: '150px', 
+                borderRadius: '8px',
+                border: '2px solid #7C3AED'
+              }} 
+            />
+            <button
+              onClick={clearImage}
+              style={{
+                position: 'absolute',
+                top: '-8px',
+                right: '-8px',
+                width: '24px',
+                height: '24px',
+                borderRadius: '50%',
+                background: '#DC2626',
+                color: 'white',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <X size={14} />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Message input */}
       {canPost ? (
         <div style={{
@@ -368,9 +484,42 @@ export default function MessageView({ channel, currentUser, onBack }) {
           borderTop: '1px solid #e5e7eb',
           background: 'white',
           display: 'flex',
-          gap: '12px',
+          gap: '8px',
           alignItems: 'flex-end'
         }}>
+          {/* Photo button */}
+          {canUploadPhotos && (
+            <>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                onChange={handleImageSelect}
+                style={{ display: 'none' }}
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={sending}
+                style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '50%',
+                  border: '2px solid #e5e7eb',
+                  background: 'white',
+                  color: '#6b7280',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}
+                title="Add photo"
+              >
+                <Image size={20} />
+              </button>
+            </>
+          )}
+          
           <textarea
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
@@ -398,17 +547,17 @@ export default function MessageView({ channel, currentUser, onBack }) {
           />
           <button
             onClick={handleSend}
-            disabled={!newMessage.trim() || sending}
+            disabled={(!newMessage.trim() && !selectedImage) || sending}
             style={{
               width: '48px',
               height: '48px',
               borderRadius: '50%',
               border: 'none',
-              background: newMessage.trim() && !sending
+              background: (newMessage.trim() || selectedImage) && !sending
                 ? 'linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)'
                 : '#e5e7eb',
-              color: newMessage.trim() && !sending ? 'white' : '#9ca3af',
-              cursor: newMessage.trim() && !sending ? 'pointer' : 'not-allowed',
+              color: (newMessage.trim() || selectedImage) && !sending ? 'white' : '#9ca3af',
+              cursor: (newMessage.trim() || selectedImage) && !sending ? 'pointer' : 'not-allowed',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -416,7 +565,7 @@ export default function MessageView({ channel, currentUser, onBack }) {
               transition: 'all 0.15s'
             }}
           >
-            <Send size={20} />
+            {uploading ? <Loader2 size={20} className="spin" /> : <Send size={20} />}
           </button>
         </div>
       ) : (
@@ -431,12 +580,66 @@ export default function MessageView({ channel, currentUser, onBack }) {
         </div>
       )}
 
-      {/* Hide back button on desktop */}
+      {/* Image viewer modal */}
+      {viewingImage && (
+        <div 
+          onClick={() => setViewingImage(null)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.9)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px',
+            cursor: 'pointer'
+          }}
+        >
+          <img 
+            src={viewingImage} 
+            alt="Full size" 
+            style={{ 
+              maxWidth: '100%', 
+              maxHeight: '100%', 
+              objectFit: 'contain',
+              borderRadius: '8px'
+            }} 
+          />
+          <button
+            onClick={() => setViewingImage(null)}
+            style={{
+              position: 'absolute',
+              top: '20px',
+              right: '20px',
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              background: 'white',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <X size={24} />
+          </button>
+        </div>
+      )}
+
+      {/* Styles */}
       <style>{`
         @media (min-width: 768px) {
           .back-button {
             display: none !important;
           }
+        }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        .spin {
+          animation: spin 1s linear infinite;
         }
       `}</style>
     </div>

@@ -19,6 +19,7 @@ export default function App() {
   const [channels, setChannels] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [emailNotifications, setEmailNotifications] = useState(true);
+  const [pushEnabled, setPushEnabled] = useState(false);
 
   // Check authentication on mount
   useEffect(() => {
@@ -30,6 +31,8 @@ export default function App() {
     if (currentUser) {
       fetchChannels();
       setEmailNotifications(currentUser.emailNotifications ?? true);
+      // Request push notification permission
+      requestPushPermission();
     }
   }, [currentUser]);
 
@@ -55,6 +58,63 @@ export default function App() {
       setChannels(data);
     } catch (err) {
       console.error('Failed to fetch channels:', err);
+    }
+  };
+
+  const requestPushPermission = async () => {
+    try {
+      // Check if push is supported
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        console.log('Push notifications not supported');
+        return;
+      }
+
+      // Check current permission
+      if (Notification.permission === 'denied') {
+        console.log('Push notifications denied');
+        return;
+      }
+
+      // Request permission if not granted
+      if (Notification.permission !== 'granted') {
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+          console.log('Push permission not granted');
+          return;
+        }
+      }
+
+      // Get service worker registration
+      const registration = await navigator.serviceWorker.ready;
+
+      // Check if already subscribed
+      let subscription = await registration.pushManager.getSubscription();
+
+      if (!subscription) {
+        // Get VAPID public key
+        const { publicKey } = await api.getVapidPublicKey();
+        const applicationServerKey = api.urlBase64ToUint8Array(publicKey);
+
+        // Subscribe to push
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey
+        });
+      }
+
+      // Send subscription to server
+      await api.subscribeToPush({
+        endpoint: subscription.endpoint,
+        keys: {
+          p256dh: btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('p256dh')))),
+          auth: btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('auth'))))
+        }
+      });
+
+      setPushEnabled(true);
+      console.log('Push notifications enabled');
+    } catch (err) {
+      console.error('Failed to setup push notifications:', err);
     }
   };
 

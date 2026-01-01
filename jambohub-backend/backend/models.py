@@ -93,6 +93,8 @@ class Channel(Base):
     unit = Column(String, nullable=True)
     allowed_roles = Column(String, nullable=False, default="admin,adult_leader,youth,parent")
     can_post_roles = Column(String, nullable=False, default="admin,adult_leader")
+    email_notifications = Column(Boolean, default=False)  # Only send emails if True
+    push_notifications = Column(Boolean, default=True)   # Send push by default
     active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     messages = relationship("Message", back_populates="channel")
@@ -106,6 +108,7 @@ class Message(Base):
     channel_id = Column(String, ForeignKey("channels.id"), nullable=False, index=True)
     user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
     content = Column(Text, nullable=False)
+    image_url = Column(String, nullable=True)  # Path to uploaded image
     pinned = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -128,6 +131,20 @@ class InfoCard(Base):
     active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class PushSubscription(Base):
+    """Web push notification subscriptions"""
+    __tablename__ = "push_subscriptions"
+    
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+    endpoint = Column(Text, nullable=False, unique=True)
+    p256dh_key = Column(String, nullable=False)  # Client public key
+    auth_key = Column(String, nullable=False)  # Auth secret
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    user = relationship("User")
 
 
 def init_db():

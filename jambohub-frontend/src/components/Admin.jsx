@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   Shield, UserPlus, Search, Edit2, Trash2, 
   KeyRound, X, Users, Loader2, Upload, Download,
-  Hash, Plus, FileText, Copy, Check, ChevronDown, ChevronUp
+  Hash, Plus, FileText, Copy, Check, ChevronDown, ChevronUp,
+  MessageSquare, Mail, Bell
 } from 'lucide-react';
 import * as api from '../lib/api';
 
@@ -10,6 +11,7 @@ export default function Admin({ currentUser }) {
   const [activeTab, setActiveTab] = useState('roster');
   const [users, setUsers] = useState([]);
   const [units, setUnits] = useState([]);
+  const [channels, setChannels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
@@ -54,12 +56,14 @@ export default function Admin({ currentUser }) {
 
   const fetchData = async () => {
     try {
-      const [usersData, unitsData] = await Promise.all([
+      const [usersData, unitsData, channelsData] = await Promise.all([
         api.getAllUsers(),
-        api.getUnits().catch(() => [])
+        api.getUnits().catch(() => []),
+        api.getChannels().catch(() => [])
       ]);
       setUsers(usersData);
       setUnits(unitsData);
+      setChannels(channelsData);
     } catch (err) {
       setError('Failed to load data');
     } finally {
@@ -181,6 +185,19 @@ export default function Admin({ currentUser }) {
       await fetchData();
     } catch (err) {
       setError(err.message);
+    }
+  };
+
+  const handleToggleChannelNotification = async (channelId, field, currentValue) => {
+    try {
+      await api.updateChannel(channelId, { [field]: !currentValue });
+      setChannels(prev => prev.map(ch => 
+        ch.id === channelId ? { ...ch, [field]: !currentValue } : ch
+      ));
+      setSuccess(`Channel updated!`);
+      setTimeout(() => setSuccess(''), 2000);
+    } catch (err) {
+      setError(err.message || 'Failed to update channel');
     }
   };
 
@@ -309,7 +326,8 @@ bob.p,Bob,Parent,bob@email.com,parent,Parent/Guardian,Troop 123,,555-456-7890,42
         {[
           { id: 'roster', icon: <FileText size={18} />, label: 'Roster' },
           { id: 'users', icon: <Users size={18} />, label: 'Manage Users' },
-          { id: 'units', icon: <Hash size={18} />, label: 'Units' }
+          { id: 'units', icon: <Hash size={18} />, label: 'Units' },
+          { id: 'channels', icon: <MessageSquare size={18} />, label: 'Channels' }
         ].map(tab => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
             padding: '10px 20px', background: activeTab === tab.id ? '#7C3AED' : 'transparent',
@@ -324,6 +342,62 @@ bob.p,Bob,Parent,bob@email.com,parent,Parent/Guardian,Troop 123,,555-456-7890,42
       {/* Messages */}
       {error && <div style={{ padding: '12px 16px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, marginBottom: 16, color: '#DC2626', fontSize: 14 }}>{error}<button onClick={() => setError('')} style={{ float: 'right', background: 'none', border: 'none', cursor: 'pointer', fontSize: 18 }}>×</button></div>}
       {success && <div style={{ padding: '12px 16px', background: '#D1FAE5', border: '1px solid #A7F3D0', borderRadius: 8, marginBottom: 16, color: '#059669', fontSize: 14 }}>{success}</div>}
+
+      {/* CHANNELS TAB */}
+      {activeTab === 'channels' && <>
+        <div style={{ marginBottom: 16 }}>
+          <p style={{ fontSize: 14, color: '#6b7280', margin: '0 0 16px 0' }}>
+            Control which channels send email and push notifications when new messages are posted.
+          </p>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {channels.map(channel => (
+            <div key={channel.id} style={{ background: 'white', borderRadius: 14, padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', gap: 16 }}>
+              <div style={{ width: 48, height: 48, borderRadius: 12, background: 'linear-gradient(135deg, #7C3AED, #A855F7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
+                {channel.icon || '📢'}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 600, fontSize: 16 }}>{channel.name}</div>
+                <div style={{ fontSize: 13, color: '#6b7280' }}>{channel.description || channel.type}</div>
+              </div>
+              <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+                <button
+                  onClick={() => handleToggleChannelNotification(channel.id, 'emailNotifications', channel.emailNotifications)}
+                  title={channel.emailNotifications ? 'Email notifications ON' : 'Email notifications OFF'}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px',
+                    background: channel.emailNotifications ? '#D1FAE5' : '#F3F4F6',
+                    color: channel.emailNotifications ? '#059669' : '#9ca3af',
+                    border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 500
+                  }}
+                >
+                  <Mail size={16} />
+                  Email {channel.emailNotifications ? 'ON' : 'OFF'}
+                </button>
+                <button
+                  onClick={() => handleToggleChannelNotification(channel.id, 'pushNotifications', channel.pushNotifications)}
+                  title={channel.pushNotifications ? 'Push notifications ON' : 'Push notifications OFF'}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px',
+                    background: channel.pushNotifications ? '#D1FAE5' : '#F3F4F6',
+                    color: channel.pushNotifications ? '#059669' : '#9ca3af',
+                    border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 500
+                  }}
+                >
+                  <Bell size={16} />
+                  Push {channel.pushNotifications ? 'ON' : 'OFF'}
+                </button>
+              </div>
+            </div>
+          ))}
+          {channels.length === 0 && (
+            <div style={{ textAlign: 'center', padding: 48, color: '#9ca3af' }}>
+              <MessageSquare size={48} style={{ marginBottom: 12, opacity: 0.5 }} />
+              <p style={{ fontSize: 16, fontWeight: 500 }}>No channels found</p>
+            </div>
+          )}
+        </div>
+      </>}
 
       {/* ROSTER TAB */}
       {activeTab === 'roster' && <>

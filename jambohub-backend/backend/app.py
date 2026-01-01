@@ -4,19 +4,85 @@ from flask_cors import CORS
 from datetime import datetime
 import os
 import logging
+import json
 
-from .models import init_db, SessionLocal, User, Channel, Message, Unit, InfoCard
+from .models import init_db, SessionLocal, User, Channel, Message, Unit, InfoCard, PushSubscription
 from .auth import hash_password, verify_password, create_token, require_auth, require_admin
 from .email_service import send_bulk_channel_notification
 
+# Push notification imports
+try:
+    from pywebpush import webpush, WebPushException
+    from cryptography.hazmat.primitives.asymmetric import ec
+    from cryptography.hazmat.backends import default_backend
+    from cryptography.hazmat.primitives import serialization
+    import base64
+    PUSH_ENABLED = True
+except ImportError as e:
+    PUSH_ENABLED = False
+    print(f"Push notifications disabled: {e}")
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# VAPID configuration - persistent keys
+VAPID_EMAIL = "mailto:vahc.jamboree@gmail.com"
+VAPID_PRIVATE_KEY_FILE = "/data/vapid_private.pem"
+VAPID_PRIVATE_KEY = None
+VAPID_PUBLIC_KEY_BASE64 = None
+
+def init_vapid():
+    """Initialize VAPID keys - load from file or generate new ones"""
+    global VAPID_PRIVATE_KEY, VAPID_PUBLIC_KEY_BASE64, PUSH_ENABLED
+    
+    if not PUSH_ENABLED:
+        return
+    
+    try:
+        if os.path.exists(VAPID_PRIVATE_KEY_FILE):
+            # Load existing key
+            with open(VAPID_PRIVATE_KEY_FILE, 'rb') as f:
+                VAPID_PRIVATE_KEY = serialization.load_pem_private_key(
+                    f.read(), password=None, backend=default_backend()
+                )
+            logger.info("Loaded existing VAPID keys")
+        else:
+            # Generate new keys
+            VAPID_PRIVATE_KEY = ec.generate_private_key(ec.SECP256R1(), default_backend())
+            
+            # Save private key
+            pem = VAPID_PRIVATE_KEY.private_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PrivateFormat.PKCS8,
+                encryption_algorithm=serialization.NoEncryption()
+            )
+            with open(VAPID_PRIVATE_KEY_FILE, 'wb') as f:
+                f.write(pem)
+            logger.info("Generated new VAPID keys")
+        
+        # Get public key as base64 for frontend (uncompressed point format)
+        public_key = VAPID_PRIVATE_KEY.public_key()
+        public_numbers = public_key.public_numbers()
+        x_bytes = public_numbers.x.to_bytes(32, 'big')
+        y_bytes = public_numbers.y.to_bytes(32, 'big')
+        # Uncompressed point: 0x04 + x + y
+        public_bytes = b'\x04' + x_bytes + y_bytes
+        VAPID_PUBLIC_KEY_BASE64 = base64.urlsafe_b64encode(public_bytes).decode('utf-8').rstrip('=')
+        
+        logger.info(f"VAPID public key ready: {VAPID_PUBLIC_KEY_BASE64[:30]}...")
+        
+    except Exception as e:
+        logger.error(f"Failed to initialize VAPID: {e}")
+        import traceback
+        traceback.print_exc()
+        PUSH_ENABLED = False
 
 app = Flask(__name__, static_folder='../static', static_url_path='')
 CORS(app, origins=["*"])
 
 with app.app_context():
     init_db()
+    init_vapid()
 
 
 # ==========================================
@@ -168,7 +234,7 @@ def get_channels():
             if channel.type == 'unit' and channel.unit != user.unit and user.role != 'admin':
                 continue
             
-            accessible.append({
+            channel_data = {
                 "id": channel.id,
                 "name": channel.name,
                 "description": channel.description,
@@ -176,9 +242,52 @@ def get_channels():
                 "type": channel.type,
                 "unit": channel.unit,
                 "canPost": user.role in channel.can_post_roles.split(',') or user.role == 'admin'
-            })
+            }
+            
+            # Include notification settings for admins
+            if user.role == 'admin':
+                channel_data["emailNotifications"] = channel.email_notifications if hasattr(channel, 'email_notifications') else False
+                channel_data["pushNotifications"] = channel.push_notifications if hasattr(channel, 'push_notifications') else True
+            
+            accessible.append(channel_data)
         
         return jsonify(accessible)
+    finally:
+        db.close()
+
+
+@app.route('/api/admin/channels/<channel_id>', methods=['PUT'])
+@require_admin
+def update_channel(channel_id):
+    """Update channel settings (admin only)"""
+    data = request.get_json()
+    db = SessionLocal()
+    try:
+        channel = db.query(Channel).filter(Channel.id == channel_id).first()
+        if not channel:
+            return jsonify({"error": "Channel not found"}), 404
+        
+        # Update notification settings
+        if 'emailNotifications' in data:
+            channel.email_notifications = data['emailNotifications']
+        if 'pushNotifications' in data:
+            channel.push_notifications = data['pushNotifications']
+        if 'name' in data:
+            channel.name = data['name']
+        if 'description' in data:
+            channel.description = data['description']
+        if 'icon' in data:
+            channel.icon = data['icon']
+        
+        db.commit()
+        
+        return jsonify({
+            "id": channel.id,
+            "name": channel.name,
+            "emailNotifications": channel.email_notifications,
+            "pushNotifications": channel.push_notifications,
+            "message": "Channel updated"
+        })
     finally:
         db.close()
 
@@ -212,6 +321,7 @@ def get_messages(channel_id):
             result.append({
                 "id": msg.id,
                 "content": msg.content,
+                "imageUrl": msg.image_url,
                 "pinned": msg.pinned,
                 "createdAt": msg.created_at.isoformat(),
                 "author": {
@@ -231,9 +341,10 @@ def get_messages(channel_id):
 def post_message(channel_id):
     data = request.get_json()
     content = data.get('content', '').strip()
+    image_url = data.get('imageUrl')  # Optional image URL
     
-    if not content:
-        return jsonify({"error": "Message content required"}), 400
+    if not content and not image_url:
+        return jsonify({"error": "Message content or image required"}), 400
     
     db = SessionLocal()
     try:
@@ -247,27 +358,107 @@ def post_message(channel_id):
         if user.role not in can_post_roles and user.role != 'admin':
             return jsonify({"error": "You cannot post in this channel"}), 403
         
-        message = Message(channel_id=channel_id, user_id=user.id, content=content)
+        message = Message(
+            channel_id=channel_id, 
+            user_id=user.id, 
+            content=content or "",
+            image_url=image_url
+        )
         db.add(message)
         db.commit()
         db.refresh(message)
         
-        try:
-            recipients = get_channel_notification_recipients(db, channel, user)
-            if recipients:
-                send_bulk_channel_notification(recipients=recipients, channel_name=channel.name, sender_name=user.name, message_preview=content)
-        except Exception as e:
-            logger.error(f"Error sending notifications: {e}")
+        # Send email notifications (only if enabled for this channel)
+        if channel.email_notifications:
+            try:
+                recipients = get_channel_notification_recipients(db, channel, user)
+                if recipients:
+                    send_bulk_channel_notification(recipients=recipients, channel_name=channel.name, sender_name=user.name, message_preview=content or "[Photo]")
+            except Exception as e:
+                logger.error(f"Error sending email notifications: {e}")
+        
+        # Send push notifications (only if enabled for this channel)
+        if channel.push_notifications:
+            try:
+                preview = content[:100] + "..." if len(content) > 100 else (content or "📷 Photo")
+                send_push_notification(
+                    title=f"#{channel.name}",
+                    body=f"{user.first_name or user.name}: {preview}",
+                    url=f"/?channel={channel_id}",
+                    exclude_user_id=user.id
+                )
+            except Exception as e:
+                logger.error(f"Error sending push notifications: {e}")
         
         return jsonify({
             "id": message.id,
             "content": message.content,
+            "imageUrl": message.image_url,
             "pinned": message.pinned,
             "createdAt": message.created_at.isoformat(),
             "author": {"id": user.id, "name": user.name, "role": user.role}
         }), 201
     finally:
         db.close()
+
+
+import uuid
+from werkzeug.utils import secure_filename
+
+UPLOAD_FOLDER = '/data/uploads'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+@app.route('/api/upload', methods=['POST'])
+@require_auth
+def upload_image():
+    """Upload an image file"""
+    if 'file' not in request.files:
+        return jsonify({"error": "No file provided"}), 400
+    
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No file selected"}), 400
+    
+    if not allowed_file(file.filename):
+        return jsonify({"error": "File type not allowed. Use PNG, JPG, GIF, or WebP."}), 400
+    
+    # Check file size
+    file.seek(0, 2)  # Seek to end
+    size = file.tell()
+    file.seek(0)  # Seek back to start
+    
+    if size > MAX_FILE_SIZE:
+        return jsonify({"error": "File too large. Maximum 10MB."}), 400
+    
+    try:
+        # Ensure upload directory exists
+        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+        
+        # Generate unique filename
+        ext = file.filename.rsplit('.', 1)[1].lower()
+        filename = f"{uuid.uuid4().hex}.{ext}"
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        
+        file.save(filepath)
+        
+        # Return URL path
+        image_url = f"/uploads/{filename}"
+        
+        return jsonify({"url": image_url})
+    except Exception as e:
+        logger.error(f"Upload failed: {e}")
+        return jsonify({"error": "Upload failed"}), 500
+
+
+@app.route('/uploads/<filename>')
+def serve_upload(filename):
+    """Serve uploaded files"""
+    return send_from_directory(UPLOAD_FOLDER, filename)
 
 
 def get_channel_notification_recipients(db, channel, sender):
@@ -754,6 +945,138 @@ def delete_info_card(card_id):
         db.delete(card)
         db.commit()
         return jsonify({"message": "Card deleted"})
+    finally:
+        db.close()
+
+
+# ==========================================
+# PUSH NOTIFICATIONS
+# ==========================================
+
+@app.route('/api/push/vapid-public-key', methods=['GET'])
+@require_auth
+def get_vapid_public_key():
+    """Get the VAPID public key for push subscription"""
+    if not PUSH_ENABLED:
+        return jsonify({"error": "Push notifications not available"}), 503
+    return jsonify({"publicKey": VAPID_PUBLIC_KEY_BASE64})
+
+
+@app.route('/api/push/subscribe', methods=['POST'])
+@require_auth
+def subscribe_push():
+    """Subscribe to push notifications"""
+    data = request.get_json()
+    
+    if not data.get('endpoint') or not data.get('keys'):
+        return jsonify({"error": "Invalid subscription data"}), 400
+    
+    db = SessionLocal()
+    try:
+        # Check if subscription already exists
+        existing = db.query(PushSubscription).filter(
+            PushSubscription.endpoint == data['endpoint']
+        ).first()
+        
+        if existing:
+            # Update existing subscription
+            existing.user_id = g.user_id
+            existing.p256dh_key = data['keys'].get('p256dh')
+            existing.auth_key = data['keys'].get('auth')
+        else:
+            # Create new subscription
+            subscription = PushSubscription(
+                user_id=g.user_id,
+                endpoint=data['endpoint'],
+                p256dh_key=data['keys'].get('p256dh'),
+                auth_key=data['keys'].get('auth')
+            )
+            db.add(subscription)
+        
+        db.commit()
+        return jsonify({"message": "Subscribed to push notifications"})
+    finally:
+        db.close()
+
+
+@app.route('/api/push/unsubscribe', methods=['POST'])
+@require_auth
+def unsubscribe_push():
+    """Unsubscribe from push notifications"""
+    data = request.get_json()
+    
+    db = SessionLocal()
+    try:
+        if data.get('endpoint'):
+            db.query(PushSubscription).filter(
+                PushSubscription.endpoint == data['endpoint']
+            ).delete()
+        else:
+            # Unsubscribe all for this user
+            db.query(PushSubscription).filter(
+                PushSubscription.user_id == g.user_id
+            ).delete()
+        
+        db.commit()
+        return jsonify({"message": "Unsubscribed from push notifications"})
+    finally:
+        db.close()
+
+
+def send_push_notification(title, body, url=None, exclude_user_id=None):
+    """Send push notification to all subscribers"""
+    if not PUSH_ENABLED:
+        logger.warning("Push notifications not enabled - pywebpush not installed")
+        return
+    
+    db = SessionLocal()
+    try:
+        query = db.query(PushSubscription)
+        if exclude_user_id:
+            query = query.filter(PushSubscription.user_id != exclude_user_id)
+        
+        subscriptions = query.all()
+        
+        payload = json.dumps({
+            "title": title,
+            "body": body,
+            "url": url or "/",
+            "icon": "/jambo-icon-192.png",
+            "badge": "/jambo-icon-192.png"
+        })
+        
+        failed_endpoints = []
+        
+        for sub in subscriptions:
+            try:
+                webpush(
+                    subscription_info={
+                        "endpoint": sub.endpoint,
+                        "keys": {
+                            "p256dh": sub.p256dh_key,
+                            "auth": sub.auth_key
+                        }
+                    },
+                    data=payload,
+                    vapid_private_key=VAPID_PRIVATE_KEY_FILE,
+                    vapid_claims={"sub": VAPID_EMAIL}
+                )
+                logger.info(f"Push sent to user {sub.user_id}")
+            except WebPushException as e:
+                logger.error(f"Push failed for {sub.endpoint}: {e}")
+                # If subscription is invalid (410 Gone or 404), mark for removal
+                if e.response and e.response.status_code in [404, 410]:
+                    failed_endpoints.append(sub.endpoint)
+        
+        # Clean up invalid subscriptions
+        if failed_endpoints:
+            db.query(PushSubscription).filter(
+                PushSubscription.endpoint.in_(failed_endpoints)
+            ).delete(synchronize_session=False)
+            db.commit()
+            
+    except Exception as e:
+        logger.error(f"Error sending push notifications: {e}")
     finally:
         db.close()
 
