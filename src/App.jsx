@@ -2,18 +2,18 @@ import React from 'react';
 import Login from './components/Login';
 import ChannelList from './components/ChannelList';
 import MessageView from './components/MessageView';
-import Schedule from './components/Schedule';
+import Calendar from './components/Calendar';
+import Info from './components/Info';
 import { channels, messages } from './data/mockData';
-import { MessageSquare, Calendar, Settings, LogOut } from 'lucide-react';
+import { MessageSquare, Calendar as CalendarIcon, Info as InfoIcon, Menu, X } from 'lucide-react';
 
 export default function App() {
   const [currentUser, setCurrentUser] = React.useState(null);
   const [activeChannel, setActiveChannel] = React.useState(null);
-  const [activeView, setActiveView] = React.useState('messages'); // 'messages' or 'schedule'
-  const [showMobileMenu, setShowMobileMenu] = React.useState(false);
+  const [activeView, setActiveView] = React.useState('messages');
+  const [showChannelList, setShowChannelList] = React.useState(false);
 
   React.useEffect(() => {
-    // Auto-select first available channel when user logs in
     if (currentUser && !activeChannel && activeView === 'messages') {
       const firstChannel = channels.find(c => 
         c.allowedRoles.includes(currentUser.role)
@@ -34,12 +34,12 @@ export default function App() {
 
   const handleViewChange = (view) => {
     setActiveView(view);
-    setShowMobileMenu(false);
+    setShowChannelList(false);
   };
 
   const handleChannelSelect = (channel) => {
     setActiveChannel(channel);
-    setShowMobileMenu(false);
+    setShowChannelList(false);
   };
 
   if (!currentUser) {
@@ -52,88 +52,72 @@ export default function App() {
       display: 'flex',
       flexDirection: 'column',
       background: '#F3F4F6',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: "'Noto Sans', sans-serif"
     }}>
-      {/* Top Navigation Bar */}
+      {/* Top App Bar */}
       <div style={{
-        height: '60px',
-        background: 'linear-gradient(135deg, #003F87 0%, #CE1126 100%)',
-        color: 'white',
+        height: '56px',
+        background: 'white',
+        borderBottom: '1px solid #E5E7EB',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 20px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-        flexShrink: 0
+        padding: '0 16px',
+        flexShrink: 0,
+        boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
       }}>
-        <h1 style={{
-          fontSize: '20px',
-          fontWeight: '700',
-          margin: 0
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {activeView === 'messages' && (
+            <button
+              onClick={() => setShowChannelList(!showChannelList)}
+              style={{
+                width: '40px',
+                height: '40px',
+                background: showChannelList ? '#F3F4F6' : 'transparent',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#111827'
+              }}
+            >
+              {showChannelList ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          )}
+          
+          <div>
+            <h1 style={{
+              fontSize: '18px',
+              fontWeight: '700',
+              margin: 0,
+              color: '#111827',
+              letterSpacing: '-0.3px'
+            }}>
+              {activeView === 'messages' && activeChannel ? activeChannel.name : 
+               activeView === 'calendar' ? 'Calendar' :
+               activeView === 'info' ? 'Info' : 'VAHC Hub'}
+            </h1>
+            <p style={{
+              fontSize: '12px',
+              color: '#6B7280',
+              margin: '2px 0 0 0',
+              fontWeight: '500'
+            }}>
+              {currentUser.name}
+            </p>
+          </div>
+        </div>
+
+        {/* Platypus & Fox Logo */}
+        <div style={{
+          fontSize: '24px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px'
         }}>
-          VAHC Jamboree Hub
-        </h1>
-
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <button
-            onClick={() => handleViewChange('messages')}
-            style={{
-              padding: '8px 16px',
-              background: activeView === 'messages' ? 'rgba(255,255,255,0.2)' : 'transparent',
-              border: '1px solid rgba(255,255,255,0.3)',
-              borderRadius: '6px',
-              color: 'white',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}
-          >
-            <MessageSquare size={16} />
-            Messages
-          </button>
-
-          <button
-            onClick={() => handleViewChange('schedule')}
-            style={{
-              padding: '8px 16px',
-              background: activeView === 'schedule' ? 'rgba(255,255,255,0.2)' : 'transparent',
-              border: '1px solid rgba(255,255,255,0.3)',
-              borderRadius: '6px',
-              color: 'white',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}
-          >
-            <Calendar size={16} />
-            Schedule
-          </button>
-
-          <button
-            onClick={handleLogout}
-            style={{
-              padding: '8px 16px',
-              background: 'transparent',
-              border: '1px solid rgba(255,255,255,0.3)',
-              borderRadius: '6px',
-              color: 'white',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}
-          >
-            <LogOut size={16} />
-            Logout
-          </button>
+          🦆🦊
         </div>
       </div>
 
@@ -141,24 +125,32 @@ export default function App() {
       <div style={{
         flex: 1,
         display: 'flex',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        position: 'relative'
       }}>
         {activeView === 'messages' ? (
           <>
-            {/* Channel Sidebar */}
+            {/* Channel Sidebar - Slide in on mobile */}
             <div style={{
-              width: '280px',
+              width: showChannelList ? '280px' : '0',
               flexShrink: 0,
-              borderRight: '1px solid #E5E7EB',
               background: 'white',
-              display: window.innerWidth < 768 && !showMobileMenu ? 'none' : 'block'
+              transition: 'width 0.3s ease',
+              overflow: 'hidden',
+              borderRight: showChannelList ? '1px solid #E5E7EB' : 'none',
+              position: window.innerWidth < 768 ? 'absolute' : 'relative',
+              height: '100%',
+              zIndex: 10,
+              boxShadow: showChannelList && window.innerWidth < 768 ? '2px 0 8px rgba(0,0,0,0.1)' : 'none'
             }}>
-              <ChannelList
-                user={currentUser}
-                channels={channels}
-                activeChannel={activeChannel}
-                onChannelSelect={handleChannelSelect}
-              />
+              {showChannelList && (
+                <ChannelList
+                  user={currentUser}
+                  channels={channels}
+                  activeChannel={activeChannel}
+                  onChannelSelect={handleChannelSelect}
+                />
+              )}
             </div>
 
             {/* Messages Area */}
@@ -170,39 +162,108 @@ export default function App() {
               />
             </div>
           </>
+        ) : activeView === 'calendar' ? (
+          <div style={{ flex: 1, overflow: 'hidden' }}>
+            <Calendar />
+          </div>
         ) : (
           <div style={{ flex: 1, overflow: 'hidden' }}>
-            <Schedule />
+            <Info />
           </div>
         )}
       </div>
 
-      {/* Mobile Menu Toggle - Only show on small screens */}
-      {activeView === 'messages' && window.innerWidth < 768 && (
-        <button
-          onClick={() => setShowMobileMenu(!showMobileMenu)}
+      {/* Bottom Navigation */}
+      <div style={{
+        height: '60px',
+        background: 'white',
+        borderTop: '1px solid #E5E7EB',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-around',
+        flexShrink: 0,
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        boxShadow: '0 -1px 3px rgba(0,0,0,0.05)'
+      }}>
+        <NavButton
+          icon={<MessageSquare size={22} />}
+          label="Messages"
+          active={activeView === 'messages'}
+          onClick={() => handleViewChange('messages')}
+        />
+        <NavButton
+          icon={<CalendarIcon size={22} />}
+          label="Calendar"
+          active={activeView === 'calendar'}
+          onClick={() => handleViewChange('calendar')}
+        />
+        <NavButton
+          icon={<InfoIcon size={22} />}
+          label="Info"
+          active={activeView === 'info'}
+          onClick={() => handleViewChange('info')}
+        />
+      </div>
+
+      {/* Overlay for mobile channel list */}
+      {showChannelList && window.innerWidth < 768 && (
+        <div
+          onClick={() => setShowChannelList(false)}
           style={{
-            position: 'fixed',
-            bottom: '20px',
-            right: '20px',
-            width: '56px',
-            height: '56px',
-            borderRadius: '50%',
-            background: '#CE1126',
-            color: 'white',
-            border: 'none',
-            cursor: 'pointer',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '24px',
-            zIndex: 1000
+            position: 'absolute',
+            top: '56px',
+            left: 0,
+            right: 0,
+            bottom: '60px',
+            background: 'rgba(0,0,0,0.3)',
+            zIndex: 9
           }}
-        >
-          {showMobileMenu ? '✕' : '☰'}
-        </button>
+        />
       )}
     </div>
+  );
+}
+
+function NavButton({ icon, label, active, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        flex: 1,
+        height: '100%',
+        background: 'transparent',
+        border: 'none',
+        cursor: 'pointer',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '4px',
+        color: active ? '#CE1126' : '#6B7280',
+        transition: 'color 0.2s',
+        position: 'relative'
+      }}
+    >
+      {active && (
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '40px',
+          height: '3px',
+          background: '#CE1126',
+          borderRadius: '0 0 3px 3px'
+        }} />
+      )}
+      {icon}
+      <span style={{
+        fontSize: '11px',
+        fontWeight: active ? '700' : '500',
+        letterSpacing: '0.3px'
+      }}>
+        {label}
+      </span>
+    </button>
   );
 }
