@@ -7,40 +7,47 @@ export default function Info() {
     <div style={{
       height: '100%',
       overflowY: 'auto',
-      background: '#F9FAFB'
+      background: 'linear-gradient(180deg, #F9FAFB 0%, #FAFBFC 100%)'
     }}>
       {/* Hero Header */}
       <div style={{
-        background: 'linear-gradient(135deg, #003F87 0%, #CE1126 100%)',
-        padding: '32px 20px',
+        background: 'linear-gradient(135deg, #CE1126 0%, #FF6B35 100%)',
+        padding: '48px 20px',
         color: 'white',
-        textAlign: 'center'
+        textAlign: 'center',
+        position: 'relative',
+        boxShadow: '0 4px 20px rgba(206, 17, 38, 0.2)'
       }}>
         <div style={{ 
-          fontSize: '48px',
-          marginBottom: '16px'
+          fontSize: '72px',
+          marginBottom: '20px',
+          filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))',
+          animation: 'float 3s ease-in-out infinite'
         }}>
           🏕️
         </div>
         <h1 style={{
-          fontSize: '28px',
-          fontWeight: '700',
-          margin: '0 0 8px 0',
-          letterSpacing: '-0.5px'
+          fontSize: '36px',
+          fontWeight: '800',
+          margin: '0 0 12px 0',
+          letterSpacing: '-1px',
+          textShadow: '0 2px 10px rgba(0,0,0,0.1)'
         }}>
           VAHC Contingent
         </h1>
         <p style={{
           fontSize: '16px',
           margin: 0,
-          opacity: 0.95,
-          fontWeight: '500'
+          fontWeight: '600',
+          letterSpacing: '3px',
+          textTransform: 'uppercase',
+          opacity: 0.95
         }}>
           National Jamboree 2025
         </p>
       </div>
 
-      <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
+      <div style={{ padding: '24px 20px', maxWidth: '800px', margin: '0 auto' }}>
         
         {/* Quick Stats */}
         <div style={{
@@ -155,33 +162,38 @@ export default function Info() {
           <GuidelineItem text="Report any incidents to leadership immediately" />
         </InfoSection>
 
-        {/* Powered By */}
+        {/* Powered By with Logo */}
         <div style={{
-          marginTop: '32px',
-          padding: '20px',
+          marginTop: '48px',
+          padding: '40px 20px',
           textAlign: 'center',
-          borderTop: '1px solid #E5E7EB'
+          borderTop: '2px solid #E5E7EB',
+          background: 'linear-gradient(135deg, #FAFBFC 0%, #F3F4F6 100%)'
         }}>
-          <p style={{
-            fontSize: '12px',
-            color: '#6B7280',
-            margin: '0 0 8px 0',
-            fontWeight: '500'
-          }}>
-            Powered by
-          </p>
-          <div style={{
-            fontSize: '18px',
-            fontWeight: '700',
-            color: '#111827',
-            letterSpacing: '-0.5px'
-          }}>
-            🦆 Platypus & Fox
-          </div>
           <p style={{
             fontSize: '11px',
             color: '#9CA3AF',
-            margin: '4px 0 0 0'
+            margin: '0 0 16px 0',
+            fontWeight: '600',
+            textTransform: 'uppercase',
+            letterSpacing: '1.5px'
+          }}>
+            Powered by
+          </p>
+          <img 
+            src="/platypus-fox-logo.png" 
+            alt="Platypus & Fox" 
+            style={{ 
+              height: '48px',
+              marginBottom: '12px',
+              animation: 'float 3s ease-in-out infinite'
+            }} 
+          />
+          <p style={{
+            fontSize: '13px',
+            color: '#6B7280',
+            margin: 0,
+            fontStyle: 'italic'
           }}>
             Building tools for Scouting excellence
           </p>
@@ -196,26 +208,29 @@ function StatCard({ icon, label, value }) {
   return (
     <div style={{
       background: 'white',
-      padding: '16px',
-      borderRadius: '12px',
+      padding: '24px',
+      borderRadius: '16px',
       textAlign: 'center',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+      boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+      border: '1px solid #E5E7EB'
     }}>
-      <div style={{ color: '#CE1126', marginBottom: '8px' }}>
+      <div style={{ color: '#CE1126', marginBottom: '12px' }}>
         {icon}
       </div>
       <div style={{
-        fontSize: '20px',
-        fontWeight: '700',
+        fontSize: '28px',
+        fontWeight: '800',
         color: '#111827',
-        marginBottom: '4px'
+        marginBottom: '6px'
       }}>
         {value}
       </div>
       <div style={{
         fontSize: '12px',
         color: '#6B7280',
-        fontWeight: '500'
+        fontWeight: '600',
+        textTransform: 'uppercase',
+        letterSpacing: '0.5px'
       }}>
         {label}
       </div>
@@ -227,25 +242,27 @@ function InfoSection({ title, icon, color, children }) {
   return (
     <div style={{
       background: 'white',
-      borderRadius: '12px',
-      padding: '20px',
-      marginBottom: '16px',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+      borderRadius: '16px',
+      padding: '24px',
+      marginBottom: '20px',
+      boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+      border: '1px solid #E5E7EB'
     }}>
       <div style={{
         display: 'flex',
         alignItems: 'center',
-        gap: '8px',
-        marginBottom: '16px',
-        paddingBottom: '12px',
+        gap: '12px',
+        marginBottom: '20px',
+        paddingBottom: '16px',
         borderBottom: '2px solid #F3F4F6'
       }}>
         <div style={{ color }}>{icon}</div>
         <h2 style={{
-          fontSize: '18px',
-          fontWeight: '700',
+          fontSize: '20px',
+          fontWeight: '800',
           color: '#111827',
-          margin: 0
+          margin: 0,
+          letterSpacing: '-0.3px'
         }}>
           {title}
         </h2>
@@ -261,10 +278,10 @@ function ContactItem({ label, value }) {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
-      padding: '12px 0',
+      padding: '14px 0',
       borderBottom: '1px solid #F3F4F6'
     }}>
-      <span style={{ fontSize: '14px', color: '#6B7280', fontWeight: '500' }}>
+      <span style={{ fontSize: '14px', color: '#6B7280', fontWeight: '600' }}>
         {label}
       </span>
       <a 
@@ -272,7 +289,7 @@ function ContactItem({ label, value }) {
         style={{
           fontSize: '16px',
           color: '#CE1126',
-          fontWeight: '600',
+          fontWeight: '700',
           textDecoration: 'none'
         }}
       >
@@ -285,13 +302,13 @@ function ContactItem({ label, value }) {
 function LocationItem({ label, value }) {
   return (
     <div style={{
-      padding: '12px 0',
+      padding: '14px 0',
       borderBottom: '1px solid #F3F4F6'
     }}>
-      <div style={{ fontSize: '13px', color: '#6B7280', marginBottom: '4px', fontWeight: '500' }}>
+      <div style={{ fontSize: '13px', color: '#6B7280', marginBottom: '6px', fontWeight: '600' }}>
         {label}
       </div>
-      <div style={{ fontSize: '15px', color: '#111827', fontWeight: '600' }}>
+      <div style={{ fontSize: '16px', color: '#111827', fontWeight: '700' }}>
         {value}
       </div>
     </div>
@@ -301,10 +318,10 @@ function LocationItem({ label, value }) {
 function InfoItem({ label, value }) {
   return (
     <div style={{
-      padding: '12px 0',
+      padding: '14px 0',
       borderBottom: '1px solid #F3F4F6'
     }}>
-      <div style={{ fontSize: '13px', color: '#6B7280', marginBottom: '4px', fontWeight: '500' }}>
+      <div style={{ fontSize: '13px', color: '#6B7280', marginBottom: '6px', fontWeight: '600' }}>
         {label}
       </div>
       <div style={{ fontSize: '14px', color: '#111827' }}>
@@ -316,9 +333,9 @@ function InfoItem({ label, value }) {
 
 function CheckItem({ text }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-      <span style={{ color: '#059669', fontSize: '16px' }}>✓</span>
-      <span>{text}</span>
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+      <span style={{ color: '#10B981', fontSize: '18px' }}>✓</span>
+      <span style={{ color: '#374151', fontSize: '14px' }}>{text}</span>
     </div>
   );
 }
@@ -328,10 +345,10 @@ function GuidelineItem({ text }) {
     <div style={{
       display: 'flex',
       alignItems: 'flex-start',
-      gap: '8px',
-      padding: '8px 0'
+      gap: '10px',
+      padding: '10px 0'
     }}>
-      <span style={{ color: '#DC2626', fontSize: '16px' }}>•</span>
+      <span style={{ color: '#EF4444', fontSize: '16px' }}>•</span>
       <span style={{ fontSize: '14px', color: '#374151', lineHeight: '1.6' }}>
         {text}
       </span>

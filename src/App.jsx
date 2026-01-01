@@ -24,14 +24,6 @@ export default function App() {
     }
   }, [currentUser, activeChannel, activeView]);
 
-  const handleLogout = () => {
-    if (confirm('Are you sure you want to log out?')) {
-      setCurrentUser(null);
-      setActiveChannel(null);
-      setActiveView('messages');
-    }
-  };
-
   const handleViewChange = (view) => {
     setActiveView(view);
     setShowChannelList(false);
@@ -51,36 +43,39 @@ export default function App() {
       height: '100vh',
       display: 'flex',
       flexDirection: 'column',
-      background: '#F3F4F6',
+      background: 'linear-gradient(135deg, #FAFBFC 0%, #F0F4F8 100%)',
       fontFamily: "'Noto Sans', sans-serif"
     }}>
-      {/* Top App Bar */}
+      {/* Top App Bar - Clean white with subtle shadow */}
       <div style={{
-        height: '56px',
+        height: '64px',
         background: 'white',
         borderBottom: '1px solid #E5E7EB',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 16px',
+        padding: '0 20px',
         flexShrink: 0,
-        boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           {activeView === 'messages' && (
             <button
               onClick={() => setShowChannelList(!showChannelList)}
               style={{
-                width: '40px',
-                height: '40px',
-                background: showChannelList ? '#F3F4F6' : 'transparent',
+                width: '44px',
+                height: '44px',
+                background: showChannelList 
+                  ? 'linear-gradient(135deg, #CE1126 0%, #FF6B35 100%)' 
+                  : '#F3F4F6',
                 border: 'none',
-                borderRadius: '8px',
+                borderRadius: '12px',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#111827'
+                color: showChannelList ? 'white' : '#374151',
+                boxShadow: showChannelList ? '0 4px 12px rgba(206, 17, 38, 0.25)' : 'none'
               }}
             >
               {showChannelList ? <X size={24} /> : <Menu size={24} />}
@@ -111,14 +106,14 @@ export default function App() {
         </div>
 
         {/* Platypus & Fox Logo */}
-        <div style={{
-          fontSize: '24px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '4px'
-        }}>
-          🦆🦊
-        </div>
+        <img 
+          src="/platypus-fox-logo.png" 
+          alt="Platypus & Fox" 
+          style={{ 
+            height: '40px',
+            filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.08))'
+          }} 
+        />
       </div>
 
       {/* Main Content Area */}
@@ -130,18 +125,18 @@ export default function App() {
       }}>
         {activeView === 'messages' ? (
           <>
-            {/* Channel Sidebar - Slide in on mobile */}
+            {/* Channel Sidebar */}
             <div style={{
               width: showChannelList ? '280px' : '0',
               flexShrink: 0,
               background: 'white',
-              transition: 'width 0.3s ease',
+              transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
               overflow: 'hidden',
               borderRight: showChannelList ? '1px solid #E5E7EB' : 'none',
               position: window.innerWidth < 768 ? 'absolute' : 'relative',
               height: '100%',
               zIndex: 10,
-              boxShadow: showChannelList && window.innerWidth < 768 ? '2px 0 8px rgba(0,0,0,0.1)' : 'none'
+              boxShadow: showChannelList && window.innerWidth < 768 ? '2px 0 12px rgba(0,0,0,0.08)' : 'none'
             }}>
               {showChannelList && (
                 <ChannelList
@@ -153,7 +148,6 @@ export default function App() {
               )}
             </div>
 
-            {/* Messages Area */}
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
               <MessageView
                 user={currentUser}
@@ -173,9 +167,9 @@ export default function App() {
         )}
       </div>
 
-      {/* Bottom Navigation */}
+      {/* Bottom Navigation - Modern elevated style */}
       <div style={{
-        height: '60px',
+        height: '72px',
         background: 'white',
         borderTop: '1px solid #E5E7EB',
         display: 'flex',
@@ -183,22 +177,22 @@ export default function App() {
         justifyContent: 'space-around',
         flexShrink: 0,
         paddingBottom: 'env(safe-area-inset-bottom)',
-        boxShadow: '0 -1px 3px rgba(0,0,0,0.05)'
+        boxShadow: '0 -2px 12px rgba(0, 0, 0, 0.04)'
       }}>
         <NavButton
-          icon={<MessageSquare size={22} />}
+          icon={<MessageSquare size={26} strokeWidth={2.5} />}
           label="Messages"
           active={activeView === 'messages'}
           onClick={() => handleViewChange('messages')}
         />
         <NavButton
-          icon={<CalendarIcon size={22} />}
+          icon={<CalendarIcon size={26} strokeWidth={2.5} />}
           label="Calendar"
           active={activeView === 'calendar'}
           onClick={() => handleViewChange('calendar')}
         />
         <NavButton
-          icon={<InfoIcon size={22} />}
+          icon={<InfoIcon size={26} strokeWidth={2.5} />}
           label="Info"
           active={activeView === 'info'}
           onClick={() => handleViewChange('info')}
@@ -211,11 +205,12 @@ export default function App() {
           onClick={() => setShowChannelList(false)}
           style={{
             position: 'absolute',
-            top: '56px',
+            top: '64px',
             left: 0,
             right: 0,
-            bottom: '60px',
-            background: 'rgba(0,0,0,0.3)',
+            bottom: '72px',
+            background: 'rgba(0, 0, 0, 0.4)',
+            backdropFilter: 'blur(2px)',
             zIndex: 9
           }}
         />
@@ -238,28 +233,42 @@ function NavButton({ icon, label, active, onClick }) {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: '4px',
-        color: active ? '#CE1126' : '#6B7280',
-        transition: 'color 0.2s',
-        position: 'relative'
+        gap: '6px',
+        color: active ? '#CE1126' : '#9CA3AF',
+        position: 'relative',
+        fontWeight: active ? '700' : '500'
       }}
     >
       {active && (
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '40px',
-          height: '3px',
-          background: '#CE1126',
-          borderRadius: '0 0 3px 3px'
-        }} />
+        <>
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '60px',
+            height: '4px',
+            background: 'linear-gradient(90deg, #CE1126 0%, #FF6B35 100%)',
+            borderRadius: '0 0 4px 4px',
+            boxShadow: '0 2px 8px rgba(206, 17, 38, 0.3)'
+          }} />
+          <div style={{
+            position: 'absolute',
+            inset: '8px',
+            background: 'linear-gradient(135deg, rgba(206, 17, 38, 0.05) 0%, rgba(255, 107, 53, 0.05) 100%)',
+            borderRadius: '12px',
+            zIndex: -1
+          }} />
+        </>
       )}
-      {icon}
+      <div style={{
+        filter: active ? 'drop-shadow(0 2px 4px rgba(206, 17, 38, 0.2))' : 'none',
+        transform: active ? 'scale(1.05)' : 'scale(1)'
+      }}>
+        {icon}
+      </div>
       <span style={{
         fontSize: '11px',
-        fontWeight: active ? '700' : '500',
         letterSpacing: '0.3px'
       }}>
         {label}
@@ -267,3 +276,5 @@ function NavButton({ icon, label, active, onClick }) {
     </button>
   );
 }
+
+
