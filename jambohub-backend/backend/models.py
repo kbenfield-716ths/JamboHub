@@ -113,6 +113,23 @@ class Message(Base):
     author = relationship("User", back_populates="messages")
 
 
+class InfoCard(Base):
+    """Dynamic content cards for the home/info page"""
+    __tablename__ = "info_cards"
+    
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    title = Column(String, nullable=False)
+    content = Column(Text, nullable=False)
+    icon = Column(String, default="📌")  # Emoji icon
+    color = Column(String, default="#7C3AED")  # Accent color
+    link_url = Column(String, nullable=True)  # Optional link
+    link_text = Column(String, nullable=True)  # Link button text
+    sort_order = Column(Integer, default=0)  # For ordering cards
+    active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 def init_db():
     """Initialize database with tables and seed data"""
     print("[Database] Creating tables...")

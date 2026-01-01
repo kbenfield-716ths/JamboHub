@@ -5,7 +5,7 @@ from datetime import datetime
 import os
 import logging
 
-from .models import init_db, SessionLocal, User, Channel, Message, Unit
+from .models import init_db, SessionLocal, User, Channel, Message, Unit, InfoCard
 from .auth import hash_password, verify_password, create_token, require_auth, require_admin
 from .email_service import send_bulk_channel_notification
 
@@ -584,6 +584,176 @@ def update_notification_settings():
             user.email_notifications = data['email_notifications']
         db.commit()
         return jsonify({"email_notifications": user.email_notifications})
+    finally:
+        db.close()
+
+
+# ==========================================
+# STATS
+# ==========================================
+
+@app.route('/api/stats', methods=['GET'])
+@require_auth
+def get_stats():
+    """Get contingent statistics"""
+    db = SessionLocal()
+    try:
+        youth_count = db.query(User).filter(User.role == 'youth', User.active == True).count()
+        adult_count = db.query(User).filter(User.role.in_(['admin', 'adult_leader']), User.active == True).count()
+        parent_count = db.query(User).filter(User.role == 'parent', User.active == True).count()
+        total_count = db.query(User).filter(User.active == True).count()
+        
+        return jsonify({
+            "youth": youth_count,
+            "adults": adult_count,
+            "parents": parent_count,
+            "total": total_count,
+            "youthCapacity": 36,
+            "youthRemaining": 36 - youth_count
+        })
+    finally:
+        db.close()
+
+
+# ==========================================
+# INFO CARDS (Dynamic Home Page Content)
+# ==========================================
+
+@app.route('/api/info-cards', methods=['GET'])
+@require_auth
+def get_info_cards():
+    """Get all active info cards"""
+    db = SessionLocal()
+    try:
+        cards = db.query(InfoCard).filter(InfoCard.active == True).order_by(InfoCard.sort_order, InfoCard.created_at.desc()).all()
+        return jsonify([{
+            "id": c.id,
+            "title": c.title,
+            "content": c.content,
+            "icon": c.icon,
+            "color": c.color,
+            "linkUrl": c.link_url,
+            "linkText": c.link_text,
+            "sortOrder": c.sort_order
+        } for c in cards])
+    finally:
+        db.close()
+
+
+@app.route('/api/admin/info-cards', methods=['GET'])
+@require_admin
+def get_all_info_cards():
+    """Get all info cards including inactive (admin only)"""
+    db = SessionLocal()
+    try:
+        cards = db.query(InfoCard).order_by(InfoCard.sort_order, InfoCard.created_at.desc()).all()
+        return jsonify([{
+            "id": c.id,
+            "title": c.title,
+            "content": c.content,
+            "icon": c.icon,
+            "color": c.color,
+            "linkUrl": c.link_url,
+            "linkText": c.link_text,
+            "sortOrder": c.sort_order,
+            "active": c.active,
+            "createdAt": c.created_at.isoformat() if c.created_at else None
+        } for c in cards])
+    finally:
+        db.close()
+
+
+@app.route('/api/admin/info-cards', methods=['POST'])
+@require_admin
+def create_info_card():
+    """Create a new info card (admin only)"""
+    data = request.get_json()
+    
+    if not data.get('title') or not data.get('content'):
+        return jsonify({"error": "Title and content are required"}), 400
+    
+    db = SessionLocal()
+    try:
+        card = InfoCard(
+            title=data['title'],
+            content=data['content'],
+            icon=data.get('icon', '📌'),
+            color=data.get('color', '#7C3AED'),
+            link_url=data.get('linkUrl'),
+            link_text=data.get('linkText'),
+            sort_order=data.get('sortOrder', 0),
+            active=data.get('active', True)
+        )
+        db.add(card)
+        db.commit()
+        db.refresh(card)
+        
+        return jsonify({
+            "id": card.id,
+            "title": card.title,
+            "content": card.content,
+            "icon": card.icon,
+            "color": card.color,
+            "linkUrl": card.link_url,
+            "linkText": card.link_text,
+            "sortOrder": card.sort_order,
+            "active": card.active
+        }), 201
+    finally:
+        db.close()
+
+
+@app.route('/api/admin/info-cards/<int:card_id>', methods=['PUT'])
+@require_admin
+def update_info_card(card_id):
+    """Update an info card (admin only)"""
+    data = request.get_json()
+    
+    db = SessionLocal()
+    try:
+        card = db.query(InfoCard).filter(InfoCard.id == card_id).first()
+        if not card:
+            return jsonify({"error": "Card not found"}), 404
+        
+        if 'title' in data: card.title = data['title']
+        if 'content' in data: card.content = data['content']
+        if 'icon' in data: card.icon = data['icon']
+        if 'color' in data: card.color = data['color']
+        if 'linkUrl' in data: card.link_url = data['linkUrl']
+        if 'linkText' in data: card.link_text = data['linkText']
+        if 'sortOrder' in data: card.sort_order = data['sortOrder']
+        if 'active' in data: card.active = data['active']
+        
+        db.commit()
+        
+        return jsonify({
+            "id": card.id,
+            "title": card.title,
+            "content": card.content,
+            "icon": card.icon,
+            "color": card.color,
+            "linkUrl": card.link_url,
+            "linkText": card.link_text,
+            "sortOrder": card.sort_order,
+            "active": card.active
+        })
+    finally:
+        db.close()
+
+
+@app.route('/api/admin/info-cards/<int:card_id>', methods=['DELETE'])
+@require_admin
+def delete_info_card(card_id):
+    """Delete an info card (admin only)"""
+    db = SessionLocal()
+    try:
+        card = db.query(InfoCard).filter(InfoCard.id == card_id).first()
+        if not card:
+            return jsonify({"error": "Card not found"}), 404
+        
+        db.delete(card)
+        db.commit()
+        return jsonify({"message": "Card deleted"})
     finally:
         db.close()
 
