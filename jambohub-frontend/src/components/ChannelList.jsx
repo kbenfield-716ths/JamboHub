@@ -25,7 +25,7 @@ export default function ChannelList({ channels, onSelectChannel, currentUser }) 
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
+    <div style={{ padding: '20px 20px 100px 20px', maxWidth: '600px', margin: '0 auto' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
         <div style={{

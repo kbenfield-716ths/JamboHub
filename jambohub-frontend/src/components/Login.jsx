@@ -42,19 +42,16 @@ export default function Login({ onLogin }) {
       }}>
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <div style={{
-            width: '80px',
-            height: '80px',
-            margin: '0 auto 16px',
-            background: 'linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)',
-            borderRadius: '20px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '40px'
-          }}>
-            🏕️
-          </div>
+          <img 
+            src="/logo.png" 
+            alt="JamboHub" 
+            style={{
+              width: '100px',
+              height: '100px',
+              objectFit: 'contain',
+              marginBottom: '16px'
+            }}
+          />
           <h1 style={{ 
             fontSize: '28px', 
             fontWeight: '800', 

@@ -133,7 +133,7 @@ export default function App() {
   const renderContent = () => {
     switch (activeView) {
       case 'info':
-        return <Info onNavigate={handleNavigate} channels={channels} />;
+        return <Info onNavigate={handleNavigate} channels={channels} currentUser={currentUser} />;
       case 'messages':
         if (selectedChannel) {
           return <MessageView channel={selectedChannel} currentUser={currentUser} />;
@@ -150,7 +150,7 @@ export default function App() {
       case 'admin':
         return <Admin currentUser={currentUser} />;
       default:
-        return <Info onNavigate={handleNavigate} channels={channels} />;
+        return <Info onNavigate={handleNavigate} channels={channels} currentUser={currentUser} />;
     }
   };
 
@@ -411,6 +411,17 @@ export default function App() {
           </button>
         ))}
       </nav>
+
+      {/* Footer */}
+      <footer style={{
+        background: '#1a1a1a',
+        color: '#9ca3af',
+        textAlign: 'center',
+        padding: '12px 16px',
+        fontSize: '12px'
+      }}>
+        Powered by <span style={{ color: '#A855F7', fontWeight: '600' }}>Platypus & Fox</span> — 2025 to 2026
+      </footer>
     </div>
   );
 }

@@ -190,3 +190,43 @@ export async function updateNotificationSettings(emailNotifications) {
     body: JSON.stringify({ email_notifications: emailNotifications })
   });
 }
+
+// ==========================================
+// STATS
+// ==========================================
+
+export async function getStats() {
+  return apiRequest('/api/stats');
+}
+
+// ==========================================
+// INFO CARDS
+// ==========================================
+
+export async function getInfoCards() {
+  return apiRequest('/api/info-cards');
+}
+
+export async function getAllInfoCards() {
+  return apiRequest('/api/admin/info-cards');
+}
+
+export async function createInfoCard(data) {
+  return apiRequest('/api/admin/info-cards', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+}
+
+export async function updateInfoCard(cardId, data) {
+  return apiRequest(`/api/admin/info-cards/${cardId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data)
+  });
+}
+
+export async function deleteInfoCard(cardId) {
+  return apiRequest(`/api/admin/info-cards/${cardId}`, {
+    method: 'DELETE'
+  });
+}

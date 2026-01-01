@@ -3,7 +3,7 @@ import { Calendar } from 'lucide-react';
 
 export default function Schedule() {
   return (
-    <div style={{ padding: '20px', maxWidth: '900px', margin: '0 auto' }}>
+    <div style={{ padding: '20px 20px 100px 20px', maxWidth: '900px', margin: '0 auto' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
         <div style={{
           width: '44px',
