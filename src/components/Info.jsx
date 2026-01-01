@@ -1,201 +1,189 @@
 import React from 'react';
-import { MapPin, Phone, Info as InfoIcon, Users, Calendar, Tent } from 'lucide-react';
+import { MapPin, Phone, AlertCircle, Users, Clock, Tent, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { info } from '../data/mockData';
 
 export default function Info() {
+  const [expandedSection, setExpandedSection] = React.useState('emergency');
+
+  const toggleSection = (section) => {
+    setExpandedSection(expandedSection === section ? null : section);
+  };
+
   return (
     <div style={{
       height: '100%',
       overflowY: 'auto',
-      background: 'linear-gradient(180deg, #F9FAFB 0%, #FAFBFC 100%)'
+      background: '#FAFAFA'
     }}>
-      {/* Hero Header */}
+      {/* Header */}
       <div style={{
-        background: 'linear-gradient(135deg, #CE1126 0%, #FF6B35 100%)',
-        padding: '48px 20px',
-        color: 'white',
+        background: 'white',
+        padding: '32px 20px',
         textAlign: 'center',
-        position: 'relative',
-        boxShadow: '0 4px 20px rgba(206, 17, 38, 0.2)'
+        borderBottom: '1px solid rgba(0,0,0,0.04)'
       }}>
         <div style={{ 
-          fontSize: '72px',
-          marginBottom: '20px',
-          filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))',
-          animation: 'float 3s ease-in-out infinite'
+          fontSize: '48px',
+          marginBottom: '16px'
         }}>
           🏕️
         </div>
         <h1 style={{
-          fontSize: '36px',
-          fontWeight: '800',
-          margin: '0 0 12px 0',
-          letterSpacing: '-1px',
-          textShadow: '0 2px 10px rgba(0,0,0,0.1)'
+          fontSize: '24px',
+          fontWeight: '700',
+          margin: '0 0 8px 0',
+          color: '#1a1a1a',
+          letterSpacing: '-0.5px'
         }}>
           VAHC Contingent
         </h1>
         <p style={{
-          fontSize: '16px',
+          fontSize: '13px',
           margin: 0,
-          fontWeight: '600',
-          letterSpacing: '3px',
+          fontWeight: '500',
+          letterSpacing: '2px',
           textTransform: 'uppercase',
-          opacity: 0.95
+          color: '#888'
         }}>
           National Jamboree 2025
         </p>
       </div>
 
-      <div style={{ padding: '24px 20px', maxWidth: '800px', margin: '0 auto' }}>
+      <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
         
         {/* Quick Stats */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+          gridTemplateColumns: 'repeat(3, 1fr)',
           gap: '12px',
           marginBottom: '24px'
         }}>
-          <StatCard icon={<Users size={24} />} label="Units" value="3" />
-          <StatCard icon={<Tent size={24} />} label="Campsite" value="Area 7B" />
-          <StatCard icon={<Calendar size={24} />} label="Duration" value="10 Days" />
+          <StatCard icon={<Users size={20} />} label="Units" value="3" />
+          <StatCard icon={<Tent size={20} />} label="Campsite" value="7B" />
+          <StatCard icon={<Clock size={20} />} label="Days" value="10" />
         </div>
 
-        {/* Emergency Contacts */}
-        <InfoSection
-          title="Emergency Contacts"
-          icon={<Phone size={20} />}
-          color="#DC2626"
-        >
-          <ContactItem label="Health Lodge" value={info.emergency.healthLodge} />
-          <ContactItem label="Contingent Leader" value={info.emergency.contingentLeader} />
-          <ContactItem label="Jamboree HQ" value={info.emergency.jamboreeHQ} />
-          <div style={{
-            marginTop: '12px',
-            padding: '12px',
-            background: '#FEF2F2',
-            borderRadius: '8px',
-            fontSize: '13px',
-            color: '#991B1B',
-            lineHeight: '1.6'
-          }}>
-            <strong>In case of emergency:</strong> Contact your unit leader first. 
-            For medical emergencies, go directly to the Health Lodge or call 911.
-          </div>
-        </InfoSection>
+        {/* Accordion Sections */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          
+          {/* Emergency Contacts */}
+          <AccordionSection
+            title="Emergency Contacts"
+            icon={<Phone size={18} />}
+            color="#DC2626"
+            isOpen={expandedSection === 'emergency'}
+            onToggle={() => toggleSection('emergency')}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <ContactRow label="Health Lodge" value={info.emergency.healthLodge} />
+              <ContactRow label="Contingent Leader" value={info.emergency.contingentLeader} />
+              <ContactRow label="Jamboree HQ" value={info.emergency.jamboreeHQ} />
+              
+              <div style={{
+                marginTop: '8px',
+                padding: '12px',
+                background: '#FEF2F2',
+                borderRadius: '8px',
+                fontSize: '12px',
+                color: '#991B1B',
+                lineHeight: '1.5'
+              }}>
+                <strong>Emergency:</strong> Contact your unit leader first. For medical emergencies, go to Health Lodge or call 911.
+              </div>
+            </div>
+          </AccordionSection>
 
-        {/* Key Locations */}
-        <InfoSection
-          title="Key Locations"
-          icon={<MapPin size={20} />}
-          color="#2563EB"
-        >
-          <LocationItem label="Our Campsite" value={info.locations.campsite} />
-          <LocationItem label="Dining Hall" value={info.locations.diningHall} />
-          <LocationItem label="Trading Post" value={info.locations.tradingPost} />
-          <LocationItem label="Health Lodge" value={info.locations.healthLodge} />
-        </InfoSection>
+          {/* Key Locations */}
+          <AccordionSection
+            title="Key Locations"
+            icon={<MapPin size={18} />}
+            color="#2563EB"
+            isOpen={expandedSection === 'locations'}
+            onToggle={() => toggleSection('locations')}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <LocationRow label="Our Campsite" value={info.locations.campsite} />
+              <LocationRow label="Dining Hall" value={info.locations.diningHall} />
+              <LocationRow label="Trading Post" value={info.locations.tradingPost} />
+              <LocationRow label="Health Lodge" value={info.locations.healthLodge} />
+            </div>
+          </AccordionSection>
 
-        {/* General Information */}
-        <InfoSection
-          title="General Information"
-          icon={<InfoIcon size={20} />}
-          color="#7C3AED"
-        >
-          <InfoItem
-            label="Check-In Time"
-            value="Sunday, July 20, 2025 - 2:00 PM"
-          />
-          <InfoItem
-            label="Check-Out Time"
-            value="Wednesday, July 30, 2025 - 10:00 AM"
-          />
-          <InfoItem
-            label="Meal Times"
-            value="Breakfast: 8:00 AM | Lunch: 12:00 PM | Dinner: 6:00 PM"
-          />
-          <InfoItem
-            label="Quiet Hours"
-            value="10:00 PM - 6:00 AM"
-          />
-          <InfoItem
-            label="WiFi Network"
-            value="Jamboree2025 (password will be provided at check-in)"
-          />
-        </InfoSection>
+          {/* General Information */}
+          <AccordionSection
+            title="General Info"
+            icon={<AlertCircle size={18} />}
+            color="#7C3AED"
+            isOpen={expandedSection === 'general'}
+            onToggle={() => toggleSection('general')}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <InfoRow label="Check-In" value="Sun, July 20 at 2:00 PM" />
+              <InfoRow label="Check-Out" value="Wed, July 30 at 10:00 AM" />
+              <InfoRow label="Meals" value="8am / 12pm / 6pm" />
+              <InfoRow label="Quiet Hours" value="10:00 PM – 6:00 AM" />
+              <InfoRow label="WiFi" value="Jamboree2025 (password at check-in)" />
+            </div>
+          </AccordionSection>
 
-        {/* What to Bring */}
-        <InfoSection
-          title="What to Bring"
-          icon={<Tent size={20} />}
-          color="#059669"
-        >
-          <div style={{
-            display: 'grid',
-            gap: '8px',
-            fontSize: '14px',
-            color: '#374151'
-          }}>
-            <CheckItem text="Class A and Class B uniforms" />
-            <CheckItem text="Rain gear and extra socks" />
-            <CheckItem text="Sunscreen and bug spray" />
-            <CheckItem text="Water bottle (refill stations available)" />
-            <CheckItem text="Personal medications" />
-            <CheckItem text="Flashlight or headlamp" />
-            <CheckItem text="Scout handbook and pen" />
-            <CheckItem text="Camera or smartphone" />
-            <CheckItem text="Cash for trading post (no ATMs on site)" />
-          </div>
-        </InfoSection>
+          {/* What to Bring */}
+          <AccordionSection
+            title="Packing List"
+            icon={<Tent size={18} />}
+            color="#059669"
+            isOpen={expandedSection === 'packing'}
+            onToggle={() => toggleSection('packing')}
+          >
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '8px' 
+            }}>
+              <CheckItem text="Class A & B uniforms" />
+              <CheckItem text="Rain gear" />
+              <CheckItem text="Extra socks" />
+              <CheckItem text="Sunscreen" />
+              <CheckItem text="Bug spray" />
+              <CheckItem text="Water bottle" />
+              <CheckItem text="Medications" />
+              <CheckItem text="Flashlight" />
+              <CheckItem text="Handbook & pen" />
+              <CheckItem text="Cash" />
+            </div>
+          </AccordionSection>
 
-        {/* Rules & Guidelines */}
-        <InfoSection
-          title="Important Guidelines"
-          icon={<InfoIcon size={20} />}
-          color="#DC2626"
-        >
-          <GuidelineItem text="Youth Protection: Two-deep leadership at all times" />
-          <GuidelineItem text="Buddy system is mandatory for all activities" />
-          <GuidelineItem text="Check in with your unit before leaving camp" />
-          <GuidelineItem text="Respect other units and Jamboree property" />
-          <GuidelineItem text="Follow all health and safety protocols" />
-          <GuidelineItem text="Report any incidents to leadership immediately" />
-        </InfoSection>
+          {/* Guidelines */}
+          <AccordionSection
+            title="YPT Guidelines"
+            icon={<AlertCircle size={18} />}
+            color="#DC2626"
+            isOpen={expandedSection === 'guidelines'}
+            onToggle={() => toggleSection('guidelines')}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <GuidelineRow text="Two-deep leadership at all times" />
+              <GuidelineRow text="Buddy system is mandatory" />
+              <GuidelineRow text="Check in with unit before leaving camp" />
+              <GuidelineRow text="Follow all health and safety protocols" />
+              <GuidelineRow text="Report incidents to leadership immediately" />
+            </div>
+          </AccordionSection>
 
-        {/* Powered By with Logo */}
+        </div>
+
+        {/* Footer */}
         <div style={{
-          marginTop: '48px',
-          padding: '40px 20px',
-          textAlign: 'center',
-          borderTop: '2px solid #E5E7EB',
-          background: 'linear-gradient(135deg, #FAFBFC 0%, #F3F4F6 100%)'
+          marginTop: '32px',
+          padding: '24px',
+          textAlign: 'center'
         }}>
           <p style={{
             fontSize: '11px',
-            color: '#9CA3AF',
-            margin: '0 0 16px 0',
-            fontWeight: '600',
-            textTransform: 'uppercase',
-            letterSpacing: '1.5px'
-          }}>
-            Powered by
-          </p>
-          <img 
-            src="/platypus-fox-logo.png" 
-            alt="Platypus & Fox" 
-            style={{ 
-              height: '48px',
-              marginBottom: '12px',
-              animation: 'float 3s ease-in-out infinite'
-            }} 
-          />
-          <p style={{
-            fontSize: '13px',
-            color: '#6B7280',
+            color: '#aaa',
             margin: 0,
-            fontStyle: 'italic'
+            fontWeight: '500'
           }}>
-            Building tools for Scouting excellence
+            JamboHub • Built for Scouting
           </p>
         </div>
       </div>
@@ -203,34 +191,32 @@ export default function Info() {
   );
 }
 
-// Helper Components
 function StatCard({ icon, label, value }) {
   return (
     <div style={{
       background: 'white',
-      padding: '24px',
-      borderRadius: '16px',
+      padding: '16px',
+      borderRadius: '12px',
       textAlign: 'center',
-      boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
-      border: '1px solid #E5E7EB'
+      boxShadow: '0 1px 3px rgba(0,0,0,0.06)'
     }}>
-      <div style={{ color: '#CE1126', marginBottom: '12px' }}>
+      <div style={{ color: '#888', marginBottom: '8px' }}>
         {icon}
       </div>
       <div style={{
-        fontSize: '28px',
-        fontWeight: '800',
-        color: '#111827',
-        marginBottom: '6px'
+        fontSize: '20px',
+        fontWeight: '700',
+        color: '#1a1a1a',
+        marginBottom: '4px'
       }}>
         {value}
       </div>
       <div style={{
-        fontSize: '12px',
-        color: '#6B7280',
-        fontWeight: '600',
+        fontSize: '11px',
+        color: '#888',
+        fontWeight: '500',
         textTransform: 'uppercase',
-        letterSpacing: '0.5px'
+        letterSpacing: '0.3px'
       }}>
         {label}
       </div>
@@ -238,58 +224,71 @@ function StatCard({ icon, label, value }) {
   );
 }
 
-function InfoSection({ title, icon, color, children }) {
+function AccordionSection({ title, icon, color, isOpen, onToggle, children }) {
   return (
     <div style={{
       background: 'white',
-      borderRadius: '16px',
-      padding: '24px',
-      marginBottom: '20px',
-      boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
-      border: '1px solid #E5E7EB'
+      borderRadius: '12px',
+      overflow: 'hidden',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.06)'
     }}>
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-        marginBottom: '20px',
-        paddingBottom: '16px',
-        borderBottom: '2px solid #F3F4F6'
-      }}>
-        <div style={{ color }}>{icon}</div>
-        <h2 style={{
-          fontSize: '20px',
-          fontWeight: '800',
-          color: '#111827',
-          margin: 0,
-          letterSpacing: '-0.3px'
+      <button
+        onClick={onToggle}
+        style={{
+          width: '100%',
+          padding: '16px 20px',
+          background: 'transparent',
+          border: 'none',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ color }}>{icon}</div>
+          <span style={{
+            fontSize: '15px',
+            fontWeight: '600',
+            color: '#1a1a1a'
+          }}>
+            {title}
+          </span>
+        </div>
+        <div style={{ color: '#ccc' }}>
+          {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+        </div>
+      </button>
+      
+      {isOpen && (
+        <div style={{
+          padding: '0 20px 20px',
+          animation: 'fadeIn 0.2s ease'
         }}>
-          {title}
-        </h2>
-      </div>
-      {children}
+          {children}
+        </div>
+      )}
     </div>
   );
 }
 
-function ContactItem({ label, value }) {
+function ContactRow({ label, value }) {
   return (
     <div style={{
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
-      padding: '14px 0',
-      borderBottom: '1px solid #F3F4F6'
+      padding: '10px 0',
+      borderBottom: '1px solid #F5F5F5'
     }}>
-      <span style={{ fontSize: '14px', color: '#6B7280', fontWeight: '600' }}>
-        {label}
-      </span>
+      <span style={{ fontSize: '13px', color: '#666' }}>{label}</span>
       <a 
         href={`tel:${value}`}
         style={{
-          fontSize: '16px',
-          color: '#CE1126',
-          fontWeight: '700',
+          fontSize: '14px',
+          color: '#1a1a1a',
+          fontWeight: '600',
           textDecoration: 'none'
         }}
       >
@@ -299,59 +298,71 @@ function ContactItem({ label, value }) {
   );
 }
 
-function LocationItem({ label, value }) {
+function LocationRow({ label, value }) {
   return (
-    <div style={{
-      padding: '14px 0',
-      borderBottom: '1px solid #F3F4F6'
-    }}>
-      <div style={{ fontSize: '13px', color: '#6B7280', marginBottom: '6px', fontWeight: '600' }}>
-        {label}
-      </div>
-      <div style={{ fontSize: '16px', color: '#111827', fontWeight: '700' }}>
-        {value}
-      </div>
+    <div style={{ padding: '8px 0', borderBottom: '1px solid #F5F5F5' }}>
+      <div style={{ fontSize: '12px', color: '#888', marginBottom: '4px' }}>{label}</div>
+      <div style={{ fontSize: '14px', color: '#1a1a1a', fontWeight: '500' }}>{value}</div>
     </div>
   );
 }
 
-function InfoItem({ label, value }) {
+function InfoRow({ label, value }) {
   return (
     <div style={{
-      padding: '14px 0',
-      borderBottom: '1px solid #F3F4F6'
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: '8px 0',
+      borderBottom: '1px solid #F5F5F5'
     }}>
-      <div style={{ fontSize: '13px', color: '#6B7280', marginBottom: '6px', fontWeight: '600' }}>
-        {label}
-      </div>
-      <div style={{ fontSize: '14px', color: '#111827' }}>
-        {value}
-      </div>
+      <span style={{ fontSize: '13px', color: '#666' }}>{label}</span>
+      <span style={{ fontSize: '13px', color: '#1a1a1a', fontWeight: '500' }}>{value}</span>
     </div>
   );
 }
 
 function CheckItem({ text }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-      <span style={{ color: '#10B981', fontSize: '18px' }}>✓</span>
-      <span style={{ color: '#374151', fontSize: '14px' }}>{text}</span>
+    <div style={{ 
+      display: 'flex', 
+      alignItems: 'center', 
+      gap: '8px',
+      padding: '6px 0'
+    }}>
+      <div style={{
+        width: '16px',
+        height: '16px',
+        borderRadius: '4px',
+        background: '#ECFDF5',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <Check size={10} color="#059669" />
+      </div>
+      <span style={{ fontSize: '13px', color: '#555' }}>{text}</span>
     </div>
   );
 }
 
-function GuidelineItem({ text }) {
+function GuidelineRow({ text }) {
   return (
     <div style={{
       display: 'flex',
       alignItems: 'flex-start',
       gap: '10px',
-      padding: '10px 0'
+      padding: '6px 0'
     }}>
-      <span style={{ color: '#EF4444', fontSize: '16px' }}>•</span>
-      <span style={{ fontSize: '14px', color: '#374151', lineHeight: '1.6' }}>
-        {text}
-      </span>
+      <div style={{
+        width: '6px',
+        height: '6px',
+        borderRadius: '50%',
+        background: '#DC2626',
+        marginTop: '6px',
+        flexShrink: 0
+      }} />
+      <span style={{ fontSize: '13px', color: '#555', lineHeight: '1.5' }}>{text}</span>
     </div>
   );
 }

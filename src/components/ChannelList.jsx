@@ -1,5 +1,6 @@
 import React from 'react';
 import { getUserChannels, getYPTWarnings } from '../lib/auth';
+import { Hash, Users, Crown, Heart } from 'lucide-react';
 
 export default function ChannelList({ user, channels, activeChannel, onChannelSelect }) {
   const userChannels = getUserChannels(user, channels);
@@ -11,6 +12,16 @@ export default function ChannelList({ user, channels, activeChannel, onChannelSe
     parent: userChannels.filter(c => c.type === 'parent')
   };
 
+  const getGroupIcon = (type) => {
+    switch(type) {
+      case 'public': return <Hash size={12} />;
+      case 'unit': return <Users size={12} />;
+      case 'leadership': return <Crown size={12} />;
+      case 'parent': return <Heart size={12} />;
+      default: return <Hash size={12} />;
+    }
+  };
+
   const ChannelItem = ({ channel }) => {
     const warnings = getYPTWarnings(channel);
     const isActive = activeChannel?.id === channel.id;
@@ -20,57 +31,91 @@ export default function ChannelList({ user, channels, activeChannel, onChannelSe
         onClick={() => onChannelSelect(channel)}
         style={{
           width: '100%',
-          padding: '12px 16px',
-          background: isActive ? '#EEF2FF' : 'transparent',
+          padding: '10px 16px',
+          background: isActive ? '#F5F5F5' : 'transparent',
           border: 'none',
-          borderLeft: isActive ? '3px solid #CE1126' : '3px solid transparent',
           textAlign: 'left',
           cursor: 'pointer',
-          transition: 'all 0.2s',
           display: 'flex',
           alignItems: 'center',
-          gap: '8px'
+          gap: '10px',
+          borderRadius: '8px',
+          margin: '2px 8px',
+          maxWidth: 'calc(100% - 16px)',
+          transition: 'background 0.15s ease'
         }}
         onMouseEnter={(e) => {
-          if (!isActive) e.currentTarget.style.background = '#F9FAFB';
+          if (!isActive) e.currentTarget.style.background = '#FAFAFA';
         }}
         onMouseLeave={(e) => {
           if (!isActive) e.currentTarget.style.background = 'transparent';
         }}
       >
-        <span style={{ fontSize: '18px' }}>{channel.icon}</span>
-        <div style={{ flex: 1 }}>
+        <span style={{ 
+          fontSize: '18px',
+          width: '24px',
+          textAlign: 'center'
+        }}>
+          {channel.icon}
+        </span>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ 
             fontWeight: isActive ? '600' : '500',
-            color: isActive ? '#111827' : '#374151',
-            fontSize: '14px'
+            color: isActive ? '#1a1a1a' : '#555',
+            fontSize: '14px',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
           }}>
             {channel.name}
           </div>
           {warnings.length > 0 && (
-            <div style={{ fontSize: '11px', color: '#DC2626', marginTop: '2px' }}>
-              ⚠️ {warnings[0]}
+            <div style={{ 
+              fontSize: '11px', 
+              color: '#DC2626', 
+              marginTop: '2px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}>
+              <span style={{ fontSize: '10px' }}>⚠</span>
+              {warnings[0]}
             </div>
           )}
         </div>
+        {isActive && (
+          <div style={{
+            width: '6px',
+            height: '6px',
+            background: '#1a1a1a',
+            borderRadius: '50%'
+          }} />
+        )}
       </button>
     );
   };
 
-  const ChannelGroup = ({ title, channels }) => {
+  const ChannelGroup = ({ title, type, channels }) => {
     if (channels.length === 0) return null;
 
     return (
       <div style={{ marginBottom: '20px' }}>
         <div style={{
-          padding: '8px 16px',
-          fontSize: '12px',
-          fontWeight: '600',
-          color: '#6B7280',
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px'
+          padding: '8px 24px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px'
         }}>
-          {title}
+          <span style={{ color: '#aaa' }}>{getGroupIcon(type)}</span>
+          <span style={{
+            fontSize: '11px',
+            fontWeight: '600',
+            color: '#999',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px'
+          }}>
+            {title}
+          </span>
         </div>
         {channels.map(channel => (
           <ChannelItem key={channel.id} channel={channel} />
@@ -83,36 +128,80 @@ export default function ChannelList({ user, channels, activeChannel, onChannelSe
     <div style={{
       height: '100%',
       overflowY: 'auto',
-      background: 'white',
-      borderRight: '1px solid #E5E7EB'
+      background: 'white'
     }}>
+      {/* User info header */}
       <div style={{
-        padding: '16px',
-        borderBottom: '1px solid #E5E7EB',
-        background: '#F9FAFB'
+        padding: '20px 24px',
+        borderBottom: '1px solid rgba(0,0,0,0.04)'
       }}>
-        <h2 style={{
-          fontSize: '16px',
-          fontWeight: '700',
-          color: '#111827',
-          margin: 0
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
         }}>
-          Channels
-        </h2>
-        <p style={{
-          fontSize: '12px',
-          color: '#6B7280',
-          margin: '4px 0 0 0'
-        }}>
-          {user.name} • {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-        </p>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            borderRadius: '12px',
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: 'white',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: '600',
+            fontSize: '16px'
+          }}>
+            {user.name.charAt(0)}
+          </div>
+          <div>
+            <div style={{
+              fontSize: '14px',
+              fontWeight: '600',
+              color: '#1a1a1a'
+            }}>
+              {user.name}
+            </div>
+            <div style={{
+              fontSize: '12px',
+              color: '#888',
+              marginTop: '2px',
+              textTransform: 'capitalize'
+            }}>
+              {user.role}
+            </div>
+          </div>
+        </div>
       </div>
 
+      {/* Channels */}
       <div style={{ padding: '12px 0' }}>
-        <ChannelGroup title="Announcements" channels={groupedChannels.public} />
-        <ChannelGroup title="Your Unit" channels={groupedChannels.unit} />
-        <ChannelGroup title="Leadership" channels={groupedChannels.leadership} />
-        <ChannelGroup title="Family" channels={groupedChannels.parent} />
+        <ChannelGroup title="Announcements" type="public" channels={groupedChannels.public} />
+        <ChannelGroup title="Your Unit" type="unit" channels={groupedChannels.unit} />
+        <ChannelGroup title="Leadership" type="leadership" channels={groupedChannels.leadership} />
+        <ChannelGroup title="Family" type="parent" channels={groupedChannels.parent} />
+      </div>
+
+      {/* Footer */}
+      <div style={{
+        padding: '20px 24px',
+        borderTop: '1px solid rgba(0,0,0,0.04)',
+        marginTop: 'auto'
+      }}>
+        <div style={{
+          padding: '12px',
+          background: '#F9FAFB',
+          borderRadius: '10px',
+          textAlign: 'center'
+        }}>
+          <div style={{
+            fontSize: '11px',
+            color: '#888',
+            fontWeight: '500'
+          }}>
+            VAHC Contingent 2025
+          </div>
+        </div>
       </div>
     </div>
   );
