@@ -250,7 +250,7 @@ export default function Login({ onLogin }) {
             margin: 0,
             fontStyle: 'italic'
           }}>
-            Building tools for Scouting excellence
+            Powered by Patypus & Fox
           </p>
         </div>
       </div>
